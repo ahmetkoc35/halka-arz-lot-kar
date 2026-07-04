@@ -1,0 +1,28 @@
+# Node dependencies
+node_modules/
+
+# Build outputs
+dist/
+android/app/build/
+android/build/
+android/.gradle/
+
+# Generated Android assets
+android/app/src/main/assets/public/
+
+# IDE files
+.vscode/
+.idea/
+
+# TypeScript caches
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
