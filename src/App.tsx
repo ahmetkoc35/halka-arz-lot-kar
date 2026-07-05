@@ -88,7 +88,7 @@ const formatNumber = (value: number) => {
 const App = () => {
   const [activeTab, setActiveTab] = useState<TabName>('builder');
   const [initialAmount, setInitialAmount] = useState('2000000');
-  const [tableName, setTableName] = useState('Benim Hisse Tablosu');
+  const [tableName, setTableName] = useState('');
   const [price, setPrice] = useState('');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
@@ -102,7 +102,7 @@ const App = () => {
   });
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
 
-  const [profitName, setProfitName] = useState('Benim Kâr Tablosu');
+  const [profitName, setProfitName] = useState('');
   const [profitPrice, setProfitPrice] = useState('');
   const [profitLots, setProfitLots] = useState('');
   const [editingProfitId, setEditingProfitId] = useState<number | null>(null);
@@ -296,16 +296,16 @@ const App = () => {
 
       <nav className="tabs" aria-label="Uygulama bölümleri">
         <button className={activeTab === 'builder' ? 'tab active' : 'tab'} onClick={() => setActiveTab('builder')}>
-          Oluştur
+          Tablo Oluştur
         </button>
         <button className={activeTab === 'saved' ? 'tab active' : 'tab'} onClick={() => setActiveTab('saved')}>
-          Kaydedilen tablolar
+          Tablolarım
         </button>
         <button className={activeTab === 'profit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('profit')}>
           Kâr
         </button>
         <button className={activeTab === 'savedProfit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('savedProfit')}>
-          Kaydedilen kârlar
+          Kar Tablolarım
         </button>
       </nav>
 
@@ -362,9 +362,9 @@ const App = () => {
       {activeTab === 'saved' && (
         <>
           <section className="card">
-            <h2>Kaydedilen tablolar</h2>
+            <h2>Tablolarım</h2>
             {savedTables.length === 0 ? (
-              <p>Henüz kaydedilmiş tablo yok. Önce Oluştur sekmesinden bir tane kaydedin.</p>
+              <p>Henüz kaydedilmiş tablo yok. Önce Tablo Oluştur sekmesinden bir tane kaydedin.</p>
             ) : (
               <div className="saved-list">
                 {savedTables.map((table) => (
@@ -497,7 +497,7 @@ const App = () => {
       {activeTab === 'savedProfit' && (
         <>
           <section className="card">
-            <h2>Kaydedilen kâr tabloları</h2>
+            <h2>Kar Tablolarım</h2>
             {savedProfitTables.length === 0 ? (
               <p>Henüz kaydedilmiş kâr tablosu yok. Önce Kâr sekmesinden bir tane oluşturun.</p>
             ) : (
