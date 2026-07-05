@@ -1,6 +1,6 @@
 {
-  "name": "Arz Tabloları",
-  "short_name": "Arz",
+  "name": "Halka Arz Tabloları",
+  "short_name": "Halka Arz",
   "description": "PWA olarak hisse tabloları ve fiyat çarpanları oluştur",
   "start_url": "/",
   "display": "standalone",
