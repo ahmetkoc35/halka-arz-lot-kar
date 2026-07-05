@@ -12,7 +12,7 @@ type SavedTable = {
   name: string;
   initialAmount: number;
   rows: number[][];
-  price: number;
+  price: number | string;
 };
 
 type SavedProfitTable = {
@@ -29,10 +29,54 @@ const xAmounts = [500000, 550000, 600000, 650000, 700000, 750000, 800000, 850000
 
 const parseIntegerValue = (value: string) => Number(value.replace(/\D/g, '')) || 0;
 
+const sanitizeDecimalInput = (value: string) => {
+  const cleaned = value.replace(/[^\d,.]/g, '');
+  const commaIndex = cleaned.indexOf(',');
+
+  if (commaIndex >= 0) {
+    const integerPart = cleaned.slice(0, commaIndex).replace(/\D/g, '');
+    const decimalPart = cleaned.slice(commaIndex + 1).replace(/\D/g, '');
+    return `${integerPart},${decimalPart}`;
+  }
+
+  const dotMatches = cleaned.match(/\./g) ?? [];
+  const dotIndex = cleaned.indexOf('.');
+
+  if (dotMatches.length === 1 && dotIndex > 0 && cleaned.slice(dotIndex + 1).length <= 2) {
+    const integerPart = cleaned.slice(0, dotIndex).replace(/\D/g, '');
+    const decimalPart = cleaned.slice(dotIndex + 1).replace(/\D/g, '');
+    return `${integerPart},${decimalPart}`;
+  }
+
+  return cleaned.replace(/\D/g, '');
+};
+
+const parseDecimalValue = (value: number | string) => {
+  if (typeof value === 'number') return value;
+  return Number(sanitizeDecimalInput(value).replace(',', '.')) || 0;
+};
+
 const formatIntegerValue = (value: number | string) => {
   const digits = typeof value === 'string' ? value.replace(/\D/g, '') : String(Math.ceil(value));
   if (!digits) return '';
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Number(digits));
+};
+
+const formatDecimalValue = (value: number | string) => {
+  if (typeof value === 'number') {
+    return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(value);
+  }
+
+  const sanitized = sanitizeDecimalInput(value);
+  if (!sanitized) return '';
+
+  const hasDecimalSeparator = sanitized.includes(',');
+  const [integerPart, decimalPart = ''] = sanitized.split(',');
+  const formattedInteger = integerPart
+    ? new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Number(integerPart))
+    : '';
+
+  return hasDecimalSeparator ? `${formattedInteger},${decimalPart}` : formattedInteger;
 };
 
 const buildRows = (initialAmount: number) => {
@@ -138,7 +182,7 @@ const App = () => {
   }, []);
 
   const rows = useMemo(() => buildRows(parseIntegerValue(initialAmount)), [initialAmount]);
-  const profitPreviewValues = useMemo(() => buildProfitValues(parseIntegerValue(profitLots), parseIntegerValue(profitPrice)), [profitLots, profitPrice]);
+  const profitPreviewValues = useMemo(() => buildProfitValues(parseIntegerValue(profitLots), parseDecimalValue(profitPrice)), [profitLots, profitPrice]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -153,7 +197,7 @@ const App = () => {
       name: cleanedName,
       initialAmount: parseIntegerValue(initialAmount),
       rows,
-      price: parseIntegerValue(price)
+      price: sanitizeDecimalInput(price)
     };
 
     const nextTables = [newTable, ...savedTables];
@@ -164,7 +208,7 @@ const App = () => {
   };
 
   const updateTablePrice = (tableId: number, nextPrice: string) => {
-    const nextTables = savedTables.map((table) => (table.id === tableId ? { ...table, price: parseIntegerValue(nextPrice) } : table));
+    const nextTables = savedTables.map((table) => (table.id === tableId ? { ...table, price: sanitizeDecimalInput(nextPrice) } : table));
     setSavedTables(nextTables);
     window.localStorage.setItem('savedTables', JSON.stringify(nextTables));
   };
@@ -215,7 +259,7 @@ const App = () => {
   const saveProfitTable = () => {
     const cleanedName = profitName.trim() || `Kâr ${savedProfitTables.length + 1}`;
     const lotsValue = Number(profitLots) || 0;
-    const priceValue = Number(profitPrice) || 0;
+    const priceValue = parseDecimalValue(profitPrice);
     const newTable: SavedProfitTable = {
       id: Date.now(),
       name: cleanedName,
@@ -239,7 +283,7 @@ const App = () => {
   };
 
   const saveEditedProfitTable = (tableId: number) => {
-    const priceValue = Number(editProfitPrice) || 0;
+    const priceValue = parseDecimalValue(editProfitPrice);
     const lotsValue = Number(editProfitLots) || 0;
     const nextTables = savedProfitTables.map((table) => {
       if (table.id !== tableId) return table;
@@ -324,7 +368,7 @@ const App = () => {
               </label>
               <label>
                 Birim fiyatı
-                <input type="text" inputMode="numeric" value={formatIntegerValue(price)} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))} placeholder="İsteğe bağlı" />
+                <input type="text" inputMode="decimal" value={formatDecimalValue(price)} onChange={(e) => setPrice(sanitizeDecimalInput(e.target.value))} placeholder="İsteğe bağlı" />
               </label>
             </div>
             <button onClick={saveTable}>Tabloyu kaydet</button>
@@ -372,7 +416,7 @@ const App = () => {
                     <button className="saved-main" onClick={() => setSelectedTableId(table.id)}>
                       <strong>{table.name}</strong>
                       <span>Başlangıç: {formatIntegerValue(table.initialAmount)}</span>
-                      <span>Fiyat: {table.price ? formatIntegerValue(table.price) : 'Ayarlanmadı'}</span>
+                      <span>Fiyat: {parseDecimalValue(table.price) ? formatDecimalValue(table.price) : 'Ayarlanmadı'}</span>
                     </button>
                     <div className="saved-actions">
                       <button className="secondary" onClick={() => startEditingTable(table)}>Düzenle</button>
@@ -390,7 +434,7 @@ const App = () => {
               <div className="editor-row">
                 <label>
                   Birim fiyatı
-                  <input type="text" inputMode="numeric" value={formatIntegerValue(selectedTable.price || '')} onChange={(e) => updateTablePrice(selectedTable.id, e.target.value)} />
+                  <input type="text" inputMode="decimal" value={formatDecimalValue(selectedTable.price || '')} onChange={(e) => updateTablePrice(selectedTable.id, e.target.value)} />
                 </label>
                 <label>
                   Ad
@@ -421,8 +465,9 @@ const App = () => {
                   </thead>
                   <tbody>
                     {selectedTable.rows.map((row, rowIndex) => {
-                      const multipliedRow = selectedTable.price
-                        ? row.map((value) => Number((value * selectedTable.price).toFixed(2)))
+                      const selectedPrice = parseDecimalValue(selectedTable.price);
+                      const multipliedRow = selectedPrice
+                        ? row.map((value) => Number((value * selectedPrice).toFixed(2)))
                         : row;
                       return (
                         <tr key={rowIndex}>
@@ -453,7 +498,7 @@ const App = () => {
               </label>
               <label>
                 Başlangıç fiyatı
-                <input type="text" inputMode="numeric" value={formatIntegerValue(profitPrice)} onChange={(e) => setProfitPrice(e.target.value.replace(/\D/g, ''))} />
+                <input type="text" inputMode="decimal" value={formatDecimalValue(profitPrice)} onChange={(e) => setProfitPrice(sanitizeDecimalInput(e.target.value))} />
               </label>
               <label>
                 Toplam lot
@@ -466,7 +511,7 @@ const App = () => {
           <section className="card">
             <h2>Tahmini büyüme</h2>
             <div className="profit-summary">
-              <strong>Başlangıç tutarı:</strong> {formatNumber((Number(profitLots) || 0) * (Number(profitPrice) || 0))}
+              <strong>Başlangıç tutarı:</strong> {formatNumber(parseIntegerValue(profitLots) * parseDecimalValue(profitPrice))}
             </div>
             <div className="table-wrap">
               <table>
@@ -506,7 +551,7 @@ const App = () => {
                   <div key={table.id} className={selectedProfitTable?.id === table.id ? 'saved-item selected' : 'saved-item'}>
                     <button className="saved-main" onClick={() => setSelectedProfitId(table.id)}>
                       <strong>{table.name}</strong>
-                      <span>Fiyat: {formatIntegerValue(table.initialPrice)}</span>
+                      <span>Fiyat: {formatDecimalValue(table.initialPrice)}</span>
                       <span>Lot: {formatIntegerValue(table.lots)}</span>
                       <span>Başlangıç tutarı: {formatNumber(table.initialPrice * table.lots)}</span>
                     </button>
@@ -530,7 +575,7 @@ const App = () => {
                 </label>
                 <label>
                   Başlangıç fiyatı
-                  <input type="text" inputMode="numeric" value={editingProfitId === selectedProfitTable.id ? formatIntegerValue(editProfitPrice) : formatIntegerValue(selectedProfitTable.initialPrice)} onChange={(e) => setEditProfitPrice(e.target.value.replace(/\D/g, ''))} />
+                  <input type="text" inputMode="decimal" value={editingProfitId === selectedProfitTable.id ? formatDecimalValue(editProfitPrice) : formatDecimalValue(selectedProfitTable.initialPrice)} onChange={(e) => setEditProfitPrice(sanitizeDecimalInput(e.target.value))} />
                 </label>
                 <label>
                   Toplam lot
