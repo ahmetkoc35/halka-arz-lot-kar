@@ -1,7 +1,7 @@
 {
   "name": "Arz Tabloları",
   "short_name": "Arz",
-  "description": "Create stock tables and price multipliers as a PWA",
+  "description": "PWA olarak hisse tabloları ve fiyat çarpanları oluştur",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

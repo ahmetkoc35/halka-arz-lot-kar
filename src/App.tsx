@@ -27,20 +27,28 @@ const yPercentages = Array.from({ length: 13 }, (_, index) => 40 + index * 5);
 const xValues = ['500k', '550k', '600k', '650k', '700k', '750k', '800k', '850k', '900k', '950k', '1M'];
 const xAmounts = [500000, 550000, 600000, 650000, 700000, 750000, 800000, 850000, 900000, 950000, 1000000];
 
+const parseIntegerValue = (value: string) => Number(value.replace(/\D/g, '')) || 0;
+
+const formatIntegerValue = (value: number | string) => {
+  const digits = typeof value === 'string' ? value.replace(/\D/g, '') : String(Math.ceil(value));
+  if (!digits) return '';
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Number(digits));
+};
+
 const buildRows = (initialAmount: number) => {
   return yPercentages.map((percent) => {
     const baseValue = (initialAmount * percent) / 100;
-    return xAmounts.map((xValue) => Number((baseValue / xValue).toFixed(2)));
+    return xAmounts.map((xValue) => Math.ceil(baseValue / xValue));
   });
 };
 
 const buildProfitValues = (lots: number, initialPrice: number) => {
   const startValue = lots * initialPrice;
-  const values = [Number(startValue.toFixed(2))];
+  const values = [Math.ceil(startValue)];
   let currentValue = startValue;
 
   for (let index = 1; index <= 12; index += 1) {
-    currentValue = Number((currentValue * 1.1).toFixed(2));
+    currentValue = Math.ceil(currentValue * 1.1);
     values.push(currentValue);
   }
 
@@ -53,7 +61,7 @@ const buildProfitDetails = (values: number[]) => {
   return values.map((value, index) => {
     if (index === 0) {
       return {
-        label: 'Start',
+        label: 'Başlangıç',
         value,
         change: 0,
         totalProfit: 0
@@ -61,11 +69,11 @@ const buildProfitDetails = (values: number[]) => {
     }
 
     const previousValue = values[index - 1];
-    const change = Number((value - previousValue).toFixed(2));
-    const totalProfit = Number((value - startValue).toFixed(2));
+    const change = Math.ceil(value - previousValue);
+    const totalProfit = Math.ceil(value - startValue);
 
     return {
-      label: `Day ${index}`,
+      label: `Gün ${index}`,
       value,
       change,
       totalProfit
@@ -74,13 +82,13 @@ const buildProfitDetails = (values: number[]) => {
 };
 
 const formatNumber = (value: number) => {
-  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.ceil(value));
 };
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<TabName>('builder');
   const [initialAmount, setInitialAmount] = useState('2000000');
-  const [tableName, setTableName] = useState('My Stock Table');
+  const [tableName, setTableName] = useState('Benim Hisse Tablosu');
   const [price, setPrice] = useState('');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
@@ -94,7 +102,7 @@ const App = () => {
   });
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
 
-  const [profitName, setProfitName] = useState('My Profit Table');
+  const [profitName, setProfitName] = useState('Benim Kâr Tablosu');
   const [profitPrice, setProfitPrice] = useState('');
   const [profitLots, setProfitLots] = useState('');
   const [editingProfitId, setEditingProfitId] = useState<number | null>(null);
@@ -129,8 +137,8 @@ const App = () => {
     };
   }, []);
 
-  const rows = useMemo(() => buildRows(Number(initialAmount) || 0), [initialAmount]);
-  const profitPreviewValues = useMemo(() => buildProfitValues(Number(profitLots) || 0, Number(profitPrice) || 0), [profitLots, profitPrice]);
+  const rows = useMemo(() => buildRows(parseIntegerValue(initialAmount)), [initialAmount]);
+  const profitPreviewValues = useMemo(() => buildProfitValues(parseIntegerValue(profitLots), parseIntegerValue(profitPrice)), [profitLots, profitPrice]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -139,13 +147,13 @@ const App = () => {
   };
 
   const saveTable = () => {
-    const cleanedName = tableName.trim() || `Table ${savedTables.length + 1}`;
+    const cleanedName = tableName.trim() || `Tablo ${savedTables.length + 1}`;
     const newTable: SavedTable = {
       id: Date.now(),
       name: cleanedName,
-      initialAmount: Number(initialAmount) || 0,
+      initialAmount: parseIntegerValue(initialAmount),
       rows,
-      price: Number(price) || 0
+      price: parseIntegerValue(price)
     };
 
     const nextTables = [newTable, ...savedTables];
@@ -156,7 +164,7 @@ const App = () => {
   };
 
   const updateTablePrice = (tableId: number, nextPrice: string) => {
-    const nextTables = savedTables.map((table) => (table.id === tableId ? { ...table, price: Number(nextPrice) || 0 } : table));
+    const nextTables = savedTables.map((table) => (table.id === tableId ? { ...table, price: parseIntegerValue(nextPrice) } : table));
     setSavedTables(nextTables);
     window.localStorage.setItem('savedTables', JSON.stringify(nextTables));
   };
@@ -173,8 +181,8 @@ const App = () => {
       return {
         ...table,
         name: editName.trim() || table.name,
-        initialAmount: Number(editAmount) || table.initialAmount,
-        rows: buildRows(Number(editAmount) || table.initialAmount)
+        initialAmount: parseIntegerValue(editAmount) || table.initialAmount,
+        rows: buildRows(parseIntegerValue(editAmount) || table.initialAmount)
       };
     });
 
@@ -205,7 +213,7 @@ const App = () => {
   const selectedTable = savedTables.find((table) => table.id === selectedTableId) ?? savedTables[0] ?? null;
 
   const saveProfitTable = () => {
-    const cleanedName = profitName.trim() || `Profit ${savedProfitTables.length + 1}`;
+    const cleanedName = profitName.trim() || `Kâr ${savedProfitTables.length + 1}`;
     const lotsValue = Number(profitLots) || 0;
     const priceValue = Number(profitPrice) || 0;
     const newTable: SavedProfitTable = {
@@ -277,54 +285,54 @@ const App = () => {
       <header>
         <div className="header-row">
           <div>
-            <h1>Stock Table Planner</h1>
-            <p>Enter the initial stock amount, generate the table, save it, and then apply a unit price in the saved tab.</p>
+            <h1>Hisse Tablosu Planlayıcı</h1>
+            <p>Başlangıç hisse miktarını girin, tabloyu oluşturun, kaydedin ve ardından kaydedilenler sekmesinde birim fiyatı uygulayın.</p>
           </div>
           {canInstall && (
-            <button onClick={handleInstallClick}>Install app</button>
+            <button onClick={handleInstallClick}>Uygulamayı yükle</button>
           )}
         </div>
       </header>
 
-      <nav className="tabs" aria-label="App sections">
+      <nav className="tabs" aria-label="Uygulama bölümleri">
         <button className={activeTab === 'builder' ? 'tab active' : 'tab'} onClick={() => setActiveTab('builder')}>
-          Builder
+          Oluştur
         </button>
         <button className={activeTab === 'saved' ? 'tab active' : 'tab'} onClick={() => setActiveTab('saved')}>
-          Saved tables
+          Kaydedilen tablolar
         </button>
         <button className={activeTab === 'profit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('profit')}>
-          Profit
+          Kâr
         </button>
         <button className={activeTab === 'savedProfit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('savedProfit')}>
-          Saved profits
+          Kaydedilen kârlar
         </button>
       </nav>
 
       {activeTab === 'builder' && (
         <>
           <section className="card">
-            <h2>Create new table</h2>
+            <h2>Yeni tablo oluştur</h2>
             <div className="grid">
               <label>
-                Table name
+                Tablo adı
                 <input value={tableName} onChange={(e) => setTableName(e.target.value)} />
               </label>
               <label>
-                Initial stock amount
-                <input type="number" value={initialAmount} onChange={(e) => setInitialAmount(e.target.value)} />
+                Başlangıç hisse miktarı
+                <input type="text" inputMode="numeric" value={formatIntegerValue(initialAmount)} onChange={(e) => setInitialAmount(e.target.value.replace(/\D/g, ''))} />
               </label>
               <label>
-                Price per unit
-                <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Optional" />
+                Birim fiyatı
+                <input type="text" inputMode="numeric" value={formatIntegerValue(price)} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))} placeholder="İsteğe bağlı" />
               </label>
             </div>
-            <button onClick={saveTable}>Save table</button>
+            <button onClick={saveTable}>Tabloyu kaydet</button>
           </section>
 
           <section className="card">
-            <h2>Generated table</h2>
-            <p className="hint">Y-axis values: 40% to 100% in 5% steps. X-axis values: 500k to 1M in 50k steps. Each cell is calculated as initial amount × y% ÷ x-axis value.</p>
+            <h2>Oluşturulan tablo</h2>
+            <p className="hint">Y ekseni değerleri: %40'tan %100'e 5 puan aralıklarla. X ekseni değerleri: 500k'den 1M'e 50k adımlarla. Her hücre başlangıç miktarı × y% ÷ x ekseni değeri olarak hesaplanır.</p>
             <div className="table-wrap">
               <table>
                 <thead>
@@ -340,7 +348,7 @@ const App = () => {
                     <tr key={rowIndex}>
                       <td>{`${yPercentages[rowIndex]}%`}</td>
                       {row.map((value, colIndex) => (
-                        <td key={`${rowIndex}-${colIndex}`}>{value.toLocaleString()}</td>
+                        <td key={`${rowIndex}-${colIndex}`}>{formatIntegerValue(value)}</td>
                       ))}
                     </tr>
                   ))}
@@ -354,21 +362,21 @@ const App = () => {
       {activeTab === 'saved' && (
         <>
           <section className="card">
-            <h2>Saved tables</h2>
+            <h2>Kaydedilen tablolar</h2>
             {savedTables.length === 0 ? (
-              <p>No saved tables yet. Save one from the builder tab first.</p>
+              <p>Henüz kaydedilmiş tablo yok. Önce Oluştur sekmesinden bir tane kaydedin.</p>
             ) : (
               <div className="saved-list">
                 {savedTables.map((table) => (
                   <div key={table.id} className={selectedTable?.id === table.id ? 'saved-item selected' : 'saved-item'}>
                     <button className="saved-main" onClick={() => setSelectedTableId(table.id)}>
                       <strong>{table.name}</strong>
-                      <span>Initial: {table.initialAmount.toLocaleString()}</span>
-                      <span>Price: {table.price || 'Not set'}</span>
+                      <span>Başlangıç: {formatIntegerValue(table.initialAmount)}</span>
+                      <span>Fiyat: {table.price ? formatIntegerValue(table.price) : 'Ayarlanmadı'}</span>
                     </button>
                     <div className="saved-actions">
-                      <button className="secondary" onClick={() => startEditingTable(table)}>Edit</button>
-                      <button className="danger" onClick={() => deleteTable(table.id)}>Delete</button>
+                      <button className="secondary" onClick={() => startEditingTable(table)}>Düzenle</button>
+                      <button className="danger" onClick={() => deleteTable(table.id)}>Sil</button>
                     </div>
                   </div>
                 ))}
@@ -381,25 +389,25 @@ const App = () => {
               <h2>{selectedTable.name}</h2>
               <div className="editor-row">
                 <label>
-                  Unit price
-                  <input type="number" value={selectedTable.price || ''} onChange={(e) => updateTablePrice(selectedTable.id, e.target.value)} />
+                  Birim fiyatı
+                  <input type="text" inputMode="numeric" value={formatIntegerValue(selectedTable.price || '')} onChange={(e) => updateTablePrice(selectedTable.id, e.target.value)} />
                 </label>
                 <label>
-                  Name
+                  Ad
                   <input value={editingTableId === selectedTable.id ? editName : selectedTable.name} onChange={(e) => setEditName(e.target.value)} />
                 </label>
                 <label>
-                  Initial amount
-                  <input type="number" value={editingTableId === selectedTable.id ? editAmount : selectedTable.initialAmount} onChange={(e) => setEditAmount(e.target.value)} />
+                  Başlangıç miktarı
+                  <input type="text" inputMode="numeric" value={editingTableId === selectedTable.id ? formatIntegerValue(editAmount) : formatIntegerValue(selectedTable.initialAmount)} onChange={(e) => setEditAmount(e.target.value.replace(/\D/g, ''))} />
                 </label>
               </div>
               <div className="action-row">
                 {editingTableId === selectedTable.id ? (
-                  <button onClick={() => saveEditedTable(selectedTable.id)}>Save changes</button>
+                  <button onClick={() => saveEditedTable(selectedTable.id)}>Değişiklikleri kaydet</button>
                 ) : (
-                  <button onClick={() => startEditingTable(selectedTable)}>Edit details</button>
+                  <button onClick={() => startEditingTable(selectedTable)}>Detayları düzenle</button>
                 )}
-                <button className="danger" onClick={() => deleteTable(selectedTable.id)}>Delete table</button>
+                <button className="danger" onClick={() => deleteTable(selectedTable.id)}>Tabloyu sil</button>
               </div>
               <div className="table-wrap">
                 <table>
@@ -420,7 +428,7 @@ const App = () => {
                         <tr key={rowIndex}>
                           <td>{`${yPercentages[rowIndex]}%`}</td>
                           {multipliedRow.map((value, colIndex) => (
-                            <td key={`${rowIndex}-${colIndex}`}>{value.toLocaleString()}</td>
+                            <td key={`${rowIndex}-${colIndex}`}>{formatIntegerValue(value)}</td>
                           ))}
                         </tr>
                       );
@@ -436,38 +444,38 @@ const App = () => {
       {activeTab === 'profit' && (
         <>
           <section className="card">
-            <h2>Create new profit growth table</h2>
-            <p className="hint">The starting amount is calculated as lots × initial price. Each following day grows by 10% cumulatively.</p>
+            <h2>Yeni kâr büyüme tablosu oluştur</h2>
+            <p className="hint">Başlangıç tutarı lot × başlangıç fiyatı olarak hesaplanır. Sonraki her gün %10 kümülatif olarak büyür.</p>
             <div className="grid">
               <label>
-                Profit table name
+                Kâr tablosu adı
                 <input value={profitName} onChange={(e) => setProfitName(e.target.value)} />
               </label>
               <label>
-                Initial price
-                <input type="number" value={profitPrice} onChange={(e) => setProfitPrice(e.target.value)} />
+                Başlangıç fiyatı
+                <input type="text" inputMode="numeric" value={formatIntegerValue(profitPrice)} onChange={(e) => setProfitPrice(e.target.value.replace(/\D/g, ''))} />
               </label>
               <label>
-                Total lots
-                <input type="number" value={profitLots} onChange={(e) => setProfitLots(e.target.value)} />
+                Toplam lot
+                <input type="text" inputMode="numeric" value={formatIntegerValue(profitLots)} onChange={(e) => setProfitLots(e.target.value.replace(/\D/g, ''))} />
               </label>
             </div>
-            <button onClick={saveProfitTable}>Save profit table</button>
+            <button onClick={saveProfitTable}>Kâr tablosunu kaydet</button>
           </section>
 
           <section className="card">
-            <h2>Projected growth</h2>
+            <h2>Tahmini büyüme</h2>
             <div className="profit-summary">
-              <strong>Start amount:</strong> {formatNumber((Number(profitLots) || 0) * (Number(profitPrice) || 0))}
+              <strong>Başlangıç tutarı:</strong> {formatNumber((Number(profitLots) || 0) * (Number(profitPrice) || 0))}
             </div>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Period</th>
-                    <th>Projected value</th>
-                    <th>Daily gain</th>
-                    <th>Total profit</th>
+                    <th>Dönem</th>
+                    <th>Tahmini değer</th>
+                    <th>Günlük kazanç</th>
+                    <th>Toplam kâr</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -489,22 +497,22 @@ const App = () => {
       {activeTab === 'savedProfit' && (
         <>
           <section className="card">
-            <h2>Saved profit tables</h2>
+            <h2>Kaydedilen kâr tabloları</h2>
             {savedProfitTables.length === 0 ? (
-              <p>No saved profit tables yet. Create one from the Profit tab first.</p>
+              <p>Henüz kaydedilmiş kâr tablosu yok. Önce Kâr sekmesinden bir tane oluşturun.</p>
             ) : (
               <div className="saved-list">
                 {savedProfitTables.map((table) => (
                   <div key={table.id} className={selectedProfitTable?.id === table.id ? 'saved-item selected' : 'saved-item'}>
                     <button className="saved-main" onClick={() => setSelectedProfitId(table.id)}>
                       <strong>{table.name}</strong>
-                      <span>Price: {table.initialPrice}</span>
-                      <span>Lots: {table.lots}</span>
-                      <span>Start amount: {formatNumber(table.initialPrice * table.lots)}</span>
+                      <span>Fiyat: {formatIntegerValue(table.initialPrice)}</span>
+                      <span>Lot: {formatIntegerValue(table.lots)}</span>
+                      <span>Başlangıç tutarı: {formatNumber(table.initialPrice * table.lots)}</span>
                     </button>
                     <div className="saved-actions">
-                      <button className="secondary" onClick={() => startEditingProfitTable(table)}>Edit</button>
-                      <button className="danger" onClick={() => deleteProfitTable(table.id)}>Delete</button>
+                      <button className="secondary" onClick={() => startEditingProfitTable(table)}>Düzenle</button>
+                      <button className="danger" onClick={() => deleteProfitTable(table.id)}>Sil</button>
                     </div>
                   </div>
                 ))}
@@ -517,34 +525,34 @@ const App = () => {
               <h2>{selectedProfitTable.name}</h2>
               <div className="editor-row">
                 <label>
-                  Name
+                  Ad
                   <input value={editingProfitId === selectedProfitTable.id ? editProfitName : selectedProfitTable.name} onChange={(e) => setEditProfitName(e.target.value)} />
                 </label>
                 <label>
-                  Initial price
-                  <input type="number" value={editingProfitId === selectedProfitTable.id ? editProfitPrice : selectedProfitTable.initialPrice} onChange={(e) => setEditProfitPrice(e.target.value)} />
+                  Başlangıç fiyatı
+                  <input type="text" inputMode="numeric" value={editingProfitId === selectedProfitTable.id ? formatIntegerValue(editProfitPrice) : formatIntegerValue(selectedProfitTable.initialPrice)} onChange={(e) => setEditProfitPrice(e.target.value.replace(/\D/g, ''))} />
                 </label>
                 <label>
-                  Total lots
-                  <input type="number" value={editingProfitId === selectedProfitTable.id ? editProfitLots : selectedProfitTable.lots} onChange={(e) => setEditProfitLots(e.target.value)} />
+                  Toplam lot
+                  <input type="text" inputMode="numeric" value={editingProfitId === selectedProfitTable.id ? formatIntegerValue(editProfitLots) : formatIntegerValue(selectedProfitTable.lots)} onChange={(e) => setEditProfitLots(e.target.value.replace(/\D/g, ''))} />
                 </label>
               </div>
               <div className="action-row">
                 {editingProfitId === selectedProfitTable.id ? (
-                  <button onClick={() => saveEditedProfitTable(selectedProfitTable.id)}>Save changes</button>
+                  <button onClick={() => saveEditedProfitTable(selectedProfitTable.id)}>Değişiklikleri kaydet</button>
                 ) : (
-                  <button onClick={() => startEditingProfitTable(selectedProfitTable)}>Edit details</button>
+                  <button onClick={() => startEditingProfitTable(selectedProfitTable)}>Detayları düzenle</button>
                 )}
-                <button className="danger" onClick={() => deleteProfitTable(selectedProfitTable.id)}>Delete table</button>
+                <button className="danger" onClick={() => deleteProfitTable(selectedProfitTable.id)}>Tabloyu sil</button>
               </div>
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Period</th>
-                      <th>Projected value</th>
-                      <th>Daily gain</th>
-                      <th>Total profit</th>
+                      <th>Dönem</th>
+                      <th>Tahmini değer</th>
+                      <th>Günlük kazanç</th>
+                      <th>Toplam kâr</th>
                     </tr>
                   </thead>
                   <tbody>
