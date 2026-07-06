@@ -1,3 +1,46 @@
 {
-  "tables": []
+  "tables": [
+    {
+      "id": "97b16a9b-74fb-49d8-9cb5-da3b9cef39ef",
+      "title": "SARAE",
+      "subtitle": "",
+      "summaryCards": [
+        {
+          "id": "3160fb1b-5d19-401c-9b2b-8b26b2ac9e84",
+          "label": "Toplam Lot",
+          "value": "89000000",
+          "tone": "neutral"
+        },
+        {
+          "id": "b89e51be-29fe-488a-a250-e37a417fdb8d",
+          "label": "Tahmini Kazanç",
+          "value": "70",
+          "tone": "positive"
+        }
+      ],
+      "columns": [
+        {
+          "id": "2dac47cb-f3aa-4976-8b0f-388ccee999a5",
+          "label": "Başlık"
+        },
+        {
+          "id": "25142430-8f14-4605-9e76-7cdd04e40883",
+          "label": "Değer",
+          "highlight": true
+        }
+      ],
+      "rows": [
+        {
+          "id": "6580f4af-23d0-497e-8b16-1f005015f4d7",
+          "cells": {
+            "2dac47cb-f3aa-4976-8b0f-388ccee999a5": "",
+            "25142430-8f14-4605-9e76-7cdd04e40883": ""
+          },
+          "highlighted": true
+        }
+      ],
+      "updatedAt": "2026-07-06T21:46:36.571Z",
+      "published": false
+    }
+  ]
 }
