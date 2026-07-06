@@ -1,4 +1,4 @@
-{
+﻿{
   "tables": [
     {
       "id": "1783375081471",
@@ -7,7 +7,7 @@
       "summaryCards": [
         {
           "id": "initial",
-          "label": "BaÅŸlangÄ±Ã§",
+          "label": "Başlangıç",
           "value": "60.750.000",
           "tone": "neutral"
         },
