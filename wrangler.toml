@@ -1,0 +1,9 @@
+name = "halka-arz-lot-kar"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-07-06"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "halka-arz-lot-kar-db"
+database_id = "REPLACE_WITH_CLOUDFLARE_D1_DATABASE_ID"
+migrations_dir = "migrations"
