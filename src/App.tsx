@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AdminPanel } from './components/AdminPanel';
+import { PublicTables } from './components/PublicTables';
 import { ShareableTableCard } from './components/ShareableTableCard';
 import { useShareTableImage } from './hooks/useShareTableImage';
-import { deleteSharedTable, fetchAdminTables, saveSharedTable } from './services/tablesApi';
+import { deleteSharedTable, fetchAdminTables, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
 import type { SharedTable, SharedTableDraft } from './types/sharedTable';
 
-type TabName = 'builder' | 'saved' | 'profit' | 'savedProfit' | 'admin';
+type TabName = 'published' | 'builder' | 'saved' | 'profit' | 'savedProfit' | 'admin';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -222,7 +223,7 @@ const ShareActions = ({ table }: ShareActionsProps) => {
 
 const App = () => {
   const canUseAdminOnThisPc = isThisPcAdmin();
-  const [activeTab, setActiveTab] = useState<TabName>('builder');
+  const [activeTab, setActiveTab] = useState<TabName>('published');
   const [initialAmount, setInitialAmount] = useState('2000000');
   const [tableName, setTableName] = useState('');
   const [price, setPrice] = useState('');
@@ -251,8 +252,16 @@ const App = () => {
     return stored ? JSON.parse(stored) : [];
   });
   const [selectedProfitId, setSelectedProfitId] = useState<number | null>(null);
+  const [publishedTables, setPublishedTables] = useState<SharedTable[]>([]);
+  const [publishedError, setPublishedError] = useState('');
+  const [isPublishedLoading, setIsPublishedLoading] = useState(true);
   const [adminTables, setAdminTables] = useState<SharedTable[]>([]);
   const [adminError, setAdminError] = useState('');
+  const [adminSecret, setAdminSecret] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return window.localStorage.getItem('pcAdminSecret') ?? '';
+  });
+  const [adminSecretInput, setAdminSecretInput] = useState('');
   const [isAdminLoading, setIsAdminLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -420,13 +429,52 @@ const App = () => {
 
   const selectedProfitTable = savedProfitTables.find((table) => table.id === selectedProfitId) ?? savedProfitTables[0] ?? null;
 
-  const loadAdminTables = async () => {
-    if (!canUseAdminOnThisPc) return;
+  const loadPublishedTables = async () => {
+    setIsPublishedLoading(true);
+    setPublishedError('');
+
+    try {
+      setPublishedTables(await fetchPublishedTables());
+    } catch (error) {
+      setPublishedError(error instanceof Error ? error.message : 'Yayınlanan tablolar alınamadı.');
+    } finally {
+      setIsPublishedLoading(false);
+    }
+  };
+
+  const handleAdminSecretSubmit = async () => {
+    if (!canUseAdminOnThisPc || !adminSecretInput.trim()) return;
     setIsAdminLoading(true);
     setAdminError('');
 
     try {
-      setAdminTables(await fetchAdminTables('local-dev-admin'));
+      const nextSecret = adminSecretInput.trim();
+      await verifyAdminSecret(nextSecret);
+      setAdminSecret(nextSecret);
+      window.localStorage.setItem('pcAdminSecret', nextSecret);
+      setAdminSecretInput('');
+      setAdminTables(await fetchAdminTables(nextSecret));
+    } catch (error) {
+      setAdminError(error instanceof Error ? error.message : 'Admin şifresi doğrulanamadı.');
+    } finally {
+      setIsAdminLoading(false);
+    }
+  };
+
+  const deactivateAdmin = () => {
+    setAdminSecret('');
+    setAdminSecretInput('');
+    setAdminTables([]);
+    window.localStorage.removeItem('pcAdminSecret');
+  };
+
+  const loadAdminTables = async () => {
+    if (!canUseAdminOnThisPc || !adminSecret) return;
+    setIsAdminLoading(true);
+    setAdminError('');
+
+    try {
+      setAdminTables(await fetchAdminTables(adminSecret));
     } catch (error) {
       setAdminError(error instanceof Error ? error.message : 'Admin tabloları alınamadı.');
     } finally {
@@ -435,13 +483,14 @@ const App = () => {
   };
 
   const handleAdminSave = async (table: SharedTableDraft) => {
-    if (!canUseAdminOnThisPc) return;
+    if (!canUseAdminOnThisPc || !adminSecret) return;
     setIsSaving(true);
     setAdminError('');
 
     try {
-      await saveSharedTable(table, 'local-dev-admin');
+      await saveSharedTable(table, adminSecret);
       await loadAdminTables();
+      await loadPublishedTables();
     } catch (error) {
       setAdminError(error instanceof Error ? error.message : 'Tablo kaydedilemedi.');
     } finally {
@@ -450,13 +499,14 @@ const App = () => {
   };
 
   const handleAdminDelete = async (id: string) => {
-    if (!canUseAdminOnThisPc || !window.confirm('Bu tablo silinsin mi?')) return;
+    if (!canUseAdminOnThisPc || !adminSecret || !window.confirm('Bu tablo silinsin mi?')) return;
     setIsSaving(true);
     setAdminError('');
 
     try {
-      await deleteSharedTable(id, 'local-dev-admin');
+      await deleteSharedTable(id, adminSecret);
       await loadAdminTables();
+      await loadPublishedTables();
     } catch (error) {
       setAdminError(error instanceof Error ? error.message : 'Tablo silinemedi.');
     } finally {
@@ -465,10 +515,20 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'admin' && canUseAdminOnThisPc) {
+    void loadPublishedTables();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'published') {
+      void loadPublishedTables();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'admin' && canUseAdminOnThisPc && adminSecret) {
       void loadAdminTables();
     }
-  }, [activeTab, canUseAdminOnThisPc]);
+  }, [activeTab, canUseAdminOnThisPc, adminSecret]);
 
   return (
     <div className="app-shell">
@@ -485,6 +545,9 @@ const App = () => {
       </header>
 
       <nav className="tabs" aria-label="Uygulama bölümleri">
+        <button className={activeTab === 'published' ? 'tab active' : 'tab'} onClick={() => setActiveTab('published')}>
+          Yayın
+        </button>
         <button className={activeTab === 'builder' ? 'tab active' : 'tab'} onClick={() => setActiveTab('builder')}>
           Tablo Oluştur
         </button>
@@ -503,6 +566,15 @@ const App = () => {
           </button>
         )}
       </nav>
+
+      {activeTab === 'published' && (
+        <PublicTables
+          error={publishedError}
+          isLoading={isPublishedLoading}
+          onRefresh={loadPublishedTables}
+          tables={publishedTables}
+        />
+      )}
 
       {activeTab === 'builder' && (
         <>
@@ -770,12 +842,31 @@ const App = () => {
         </>
       )}
 
-      {activeTab === 'admin' && canUseAdminOnThisPc && (
+      {activeTab === 'admin' && canUseAdminOnThisPc && !adminSecret && (
+        <section className="card empty-state">
+          <h2>Admin girişi</h2>
+          <p>Bu bölüm yalnızca bu PC'de görünür. Cloudflare'daki ADMIN_SECRET değerini gir.</p>
+          <div className="action-row">
+            <input
+              type="password"
+              value={adminSecretInput}
+              onChange={(event) => setAdminSecretInput(event.target.value)}
+              placeholder="Admin şifresi"
+            />
+            <button onClick={handleAdminSecretSubmit} disabled={isAdminLoading || !adminSecretInput.trim()}>
+              {isAdminLoading ? 'Kontrol ediliyor...' : 'Admini aç'}
+            </button>
+          </div>
+          {adminError && <p className="error-text">{adminError}</p>}
+        </section>
+      )}
+
+      {activeTab === 'admin' && canUseAdminOnThisPc && adminSecret && (
         <AdminPanel
           error={adminError}
           isLoading={isAdminLoading}
           isSaving={isSaving}
-          onDeactivate={() => setActiveTab('builder')}
+          onDeactivate={deactivateAdmin}
           onDelete={handleAdminDelete}
           onRefresh={loadAdminTables}
           onSave={handleAdminSave}

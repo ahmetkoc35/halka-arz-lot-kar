@@ -21,6 +21,9 @@ export const json = (data: unknown, init: ResponseInit = {}) =>
     ...init,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type,x-admin-secret',
       ...(init.headers ?? {})
     }
   });

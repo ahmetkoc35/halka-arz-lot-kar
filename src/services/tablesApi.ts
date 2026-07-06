@@ -1,6 +1,7 @@
 import type { SharedTable, SharedTableDraft, TableResponse, TablesResponse } from '../types/sharedTable';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+const DEFAULT_API_BASE_URL = 'https://halka-arz-lot-kar.pages.dev';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/$/, '');
 
 const apiUrl = (path: string) => `${API_BASE_URL}${path}`;
 

@@ -135,7 +135,7 @@ VITE_API_BASE_URL
 
 This must match the hidden activation secret you use in `/?admin=...`.
 
-`VITE_API_BASE_URL` can stay blank on Cloudflare Pages because the app and API share the same origin. Set it only when building an APK that should talk to the deployed Cloudflare site, for example `https://YOUR_SITE.pages.dev`.
+`VITE_API_BASE_URL` should point to the deployed Cloudflare Pages site when building the APK, for example `https://halka-arz-lot-kar.pages.dev`. The app also defaults to that URL when the variable is not set.
 
 ## Future Maintenance
 
