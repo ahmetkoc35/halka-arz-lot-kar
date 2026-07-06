@@ -15,8 +15,11 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const App = () => {
-  const { activationError, adminToken, deactivateAdmin, isAdmin } = useAdminMode();
+  const { activateAdmin, activationError, adminToken, deactivateAdmin, isAdmin } = useAdminMode();
   const [activeTab, setActiveTab] = useState<AppTab>('published');
+  const [adminTapCount, setAdminTapCount] = useState(0);
+  const [adminSecretInput, setAdminSecretInput] = useState('');
+  const [showAdminActivation, setShowAdminActivation] = useState(false);
   const [publishedTables, setPublishedTables] = useState<SharedTable[]>([]);
   const [adminTables, setAdminTables] = useState<SharedTable[]>([]);
   const [publicError, setPublicError] = useState('');
@@ -93,6 +96,28 @@ const App = () => {
     setDeferredPrompt(null);
   };
 
+  const handleTitleTap = () => {
+    if (isAdmin) return;
+    const nextCount = adminTapCount + 1;
+    setAdminTapCount(nextCount);
+
+    if (nextCount >= 7) {
+      setShowAdminActivation(true);
+      setAdminTapCount(0);
+    }
+  };
+
+  const handleHiddenAdminActivation = async () => {
+    try {
+      await activateAdmin(adminSecretInput.trim());
+      setAdminSecretInput('');
+      setShowAdminActivation(false);
+      setActiveTab('admin');
+    } catch {
+      setAdminSecretInput('');
+    }
+  };
+
   const handleSave = async (table: SharedTableDraft) => {
     setIsSaving(true);
     setAdminError('');
@@ -127,11 +152,24 @@ const App = () => {
       <header>
         <div className="header-row">
           <div>
-            <h1>Halka Arz Tabloları</h1>
+            <h1 onClick={handleTitleTap}>Halka Arz Tabloları</h1>
             <p>Yayınlanan tabloları görüntüleyin, paylaşın ve admin cihazından güncel tutun.</p>
           </div>
           {canInstall && <button onClick={handleInstallClick}>Uygulamayı yükle</button>}
         </div>
+        {showAdminActivation && !isAdmin && (
+          <div className="hidden-admin-panel">
+            <input
+              autoFocus
+              placeholder="Admin sırrı"
+              type="password"
+              value={adminSecretInput}
+              onChange={(event) => setAdminSecretInput(event.target.value)}
+            />
+            <button onClick={handleHiddenAdminActivation}>Admini etkinleştir</button>
+            <button className="secondary" onClick={() => setShowAdminActivation(false)}>Vazgeç</button>
+          </div>
+        )}
         {activationError && <p className="error-text">{activationError}</p>}
       </header>
 

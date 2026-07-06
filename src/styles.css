@@ -34,6 +34,7 @@ header, .card {
 
 h1, h2 { margin-top: 0; letter-spacing: 0; }
 h1 { font-size: clamp(1.45rem, 6vw, 2.4rem); }
+h1 { user-select: none; }
 h2 { font-size: clamp(1.1rem, 4.4vw, 1.5rem); }
 p { margin: 0; color: #cbd5e1; }
 .header-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -96,6 +97,8 @@ tr.highlight-row td { background: rgba(56, 189, 248, 0.08); }
 .editor-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0; }
 .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 .profit-summary { margin-bottom: 12px; color: #f8fafc; }
+.hidden-admin-panel { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.hidden-admin-panel input { flex: 1 1 180px; }
 .published-list, .local-tools, .admin-layout { display: grid; gap: 16px; }
 .published-table {
   background: rgba(15, 23, 42, 0.85);

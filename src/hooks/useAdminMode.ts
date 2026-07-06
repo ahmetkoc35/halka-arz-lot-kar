@@ -9,17 +9,27 @@ export const useAdminMode = () => {
   const [activationError, setActivationError] = useState('');
   const isAdmin = Boolean(adminToken);
 
+  const activateAdmin = async (secret: string) => {
+    try {
+      await verifyAdminSecret(secret);
+      window.localStorage.setItem(STORAGE_KEY, secret);
+      setAdminToken(secret);
+      setActivationError('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Admin sırrı geçersiz.';
+      setActivationError(message);
+      window.localStorage.removeItem(STORAGE_KEY);
+      setAdminToken('');
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const secret = params.get('admin');
     if (!secret) return;
 
-    verifyAdminSecret(secret)
-      .then(() => {
-        window.localStorage.setItem(STORAGE_KEY, secret);
-        setAdminToken(secret);
-        setActivationError('');
-      })
+    activateAdmin(secret)
       .catch((error: Error) => {
         setActivationError(error.message);
         window.localStorage.removeItem(STORAGE_KEY);
@@ -40,6 +50,7 @@ export const useAdminMode = () => {
 
   return {
     adminToken,
+    activateAdmin,
     activationError,
     isAdmin,
     deactivateAdmin

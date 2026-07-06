@@ -95,6 +95,8 @@ https://YOUR_SITE.pages.dev/?admin=YOUR_ADMIN_SECRET
 
 After activation, the `Yönetim` tab appears on that device. The URL is cleaned automatically. To remove admin access from the device, use `Admin çıkışı`.
 
+For the installed Android app, tap the `Halka Arz Tabloları` title 7 times. A hidden admin prompt appears. Enter the same `ADMIN_SECRET`; if it verifies successfully, only that phone stores admin access locally.
+
 ## Publishing Tables
 
 1. Activate admin mode.
