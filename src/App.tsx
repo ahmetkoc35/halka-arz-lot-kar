@@ -203,7 +203,7 @@ type ShareActionsProps = {
 
 const ShareActions = ({ table }: ShareActionsProps) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
-  const { downloadImage, isSharing, shareError, shareImage } = useShareTableImage(shareCardRef, table);
+  const { downloadImage, isSharing, shareError, shareImage, shareStatus } = useShareTableImage(shareCardRef, table);
 
   return (
     <>
@@ -211,6 +211,7 @@ const ShareActions = ({ table }: ShareActionsProps) => {
         <button onClick={shareImage} disabled={isSharing}>{isSharing ? 'Hazırlanıyor...' : 'Paylaş'}</button>
         <button className="secondary" onClick={downloadImage} disabled={isSharing}>PNG indir</button>
       </div>
+      {shareStatus && <p className="success-text">{shareStatus}</p>}
       {shareError && <p className="error-text">{shareError}</p>}
       <div className="share-render-area" aria-hidden="true">
         <ShareableTableCard ref={shareCardRef} table={table} />

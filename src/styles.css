@@ -134,6 +134,7 @@ tr.highlight-row td { background: rgba(56, 189, 248, 0.08); }
 .compact table { min-width: 620px; }
 .empty-state { display: grid; gap: 12px; }
 .error-text { color: #fecaca; margin-top: 10px; }
+.success-text { color: #bbf7d0; margin-top: 10px; }
 .error-panel { border-color: rgba(248, 113, 113, 0.55); }
 .tool-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .tool-tabs button { background: rgba(30, 41, 59, 0.7); color: #e2e8f0; }
@@ -175,10 +176,12 @@ tr.highlight-row td { background: rgba(56, 189, 248, 0.08); }
 .sticky-actions { position: sticky; bottom: 86px; background: rgba(15, 23, 42, 0.92); padding: 10px 0 0; }
 .share-render-area {
   position: fixed;
-  left: -9999px;
+  left: 0;
   top: 0;
   width: 1080px;
+  opacity: 0;
   pointer-events: none;
+  z-index: -1;
 }
 .share-card {
   position: relative;
