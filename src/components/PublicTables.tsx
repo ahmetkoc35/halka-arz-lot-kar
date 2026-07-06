@@ -10,16 +10,20 @@ type PublicTablesProps = {
   isLoading: boolean;
   error: string;
   onRefresh: () => void;
+  favoriteIds?: string[];
+  onToggleFavorite?: (tableId: string) => void;
 };
 
 type PublicTableItemProps = {
   table: SharedTable;
+  isFavorite: boolean;
+  onToggleFavorite?: (tableId: string) => void;
 };
 
-const PublicTableItem = ({ table }: PublicTableItemProps) => {
+const PublicTableItem = ({ isFavorite, onToggleFavorite, table }: PublicTableItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
-  const { downloadImage, isSharing, shareError, shareImage } = useShareTableImage(shareCardRef, table);
+  const { downloadImage, isSharing, shareError, shareImage, shareStatus } = useShareTableImage(shareCardRef, table);
 
   return (
     <article className="published-table">
@@ -68,6 +72,11 @@ const PublicTableItem = ({ table }: PublicTableItemProps) => {
       )}
 
       <div className="action-row">
+        {onToggleFavorite && (
+          <button className={isFavorite ? 'warning' : 'secondary'} onClick={() => onToggleFavorite(table.id)}>
+            {isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+          </button>
+        )}
         <button onClick={shareImage} disabled={isSharing}>
           {isSharing ? 'Hazırlanıyor...' : 'Paylaş'}
         </button>
@@ -75,6 +84,7 @@ const PublicTableItem = ({ table }: PublicTableItemProps) => {
           PNG indir
         </button>
       </div>
+      {shareStatus && <p className="success-text">{shareStatus}</p>}
       {shareError && <p className="error-text">{shareError}</p>}
 
       <div className="share-render-area" aria-hidden="true">
@@ -84,7 +94,7 @@ const PublicTableItem = ({ table }: PublicTableItemProps) => {
   );
 };
 
-export const PublicTables = ({ tables, isLoading, error, onRefresh }: PublicTablesProps) => {
+export const PublicTables = ({ error, favoriteIds = [], isLoading, onRefresh, onToggleFavorite, tables }: PublicTablesProps) => {
   if (isLoading) {
     return (
       <section className="card">
@@ -115,7 +125,12 @@ export const PublicTables = ({ tables, isLoading, error, onRefresh }: PublicTabl
   return (
     <section className="published-list">
       {tables.map((table) => (
-        <PublicTableItem key={table.id} table={table} />
+        <PublicTableItem
+          isFavorite={favoriteIds.includes(table.id)}
+          key={table.id}
+          onToggleFavorite={onToggleFavorite}
+          table={table}
+        />
       ))}
     </section>
   );

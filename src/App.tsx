@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { AdminPanel } from './components/AdminPanel';
 import { PublicTables } from './components/PublicTables';
 import { ShareableTableCard } from './components/ShareableTableCard';
 import { useShareTableImage } from './hooks/useShareTableImage';
-import { deleteSharedTable, fetchAdminTables, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
-import type { SharedTable, SharedTableDraft } from './types/sharedTable';
+import { fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
+import type { SharedTable } from './types/sharedTable';
 
-type TabName = 'published' | 'builder' | 'saved' | 'profit' | 'savedProfit' | 'admin';
+type TabName = 'published' | 'favorites' | 'builder' | 'saved' | 'profit' | 'savedProfit' | 'admin';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -117,7 +116,7 @@ const buildProfitDetails = (values: number[]) => {
   return values.map((value, index) => {
     if (index === 0) {
       return {
-        label: 'Başlangıç',
+        label: 'BaÅŸlangÄ±Ã§',
         value,
         change: 0,
         totalProfit: 0
@@ -129,7 +128,7 @@ const buildProfitDetails = (values: number[]) => {
     const totalProfit = Math.ceil(value - startValue);
 
     return {
-      label: `Gün ${index}`,
+      label: `GÃ¼n ${index}`,
       value,
       change,
       totalProfit
@@ -150,8 +149,8 @@ const savedTableToShareable = (table: SavedTable): SharedTable => {
     updatedAt: new Date().toISOString(),
     published: true,
     summaryCards: [
-      { id: 'initial', label: 'Başlangıç', value: formatIntegerValue(table.initialAmount), tone: 'neutral' },
-      { id: 'price', label: 'Birim fiyat', value: selectedPrice ? formatDecimalValue(table.price) : 'Ayarlanmadı', tone: 'positive' }
+      { id: 'initial', label: 'BaÅŸlangÄ±Ã§', value: formatIntegerValue(table.initialAmount), tone: 'neutral' },
+      { id: 'price', label: 'Birim fiyat', value: selectedPrice ? formatDecimalValue(table.price) : 'AyarlanmadÄ±', tone: 'positive' }
     ],
     columns: [{ id: 'percent', label: 'Y / X' }, ...xValues.map((value) => ({ id: value, label: value, highlight: value === '1M' }))],
     rows: table.rows.map((row, rowIndex) => ({
@@ -173,18 +172,18 @@ const savedTableToShareable = (table: SavedTable): SharedTable => {
 const profitTableToShareable = (table: SavedProfitTable): SharedTable => ({
   id: String(table.id),
   title: table.name,
-  subtitle: `${formatIntegerValue(table.lots)} lot × ${formatDecimalValue(table.initialPrice)}`,
+  subtitle: `${formatIntegerValue(table.lots)} lot Ã— ${formatDecimalValue(table.initialPrice)}`,
   updatedAt: new Date().toISOString(),
   published: true,
   summaryCards: [
-    { id: 'start', label: 'Başlangıç', value: formatNumber(table.initialPrice * table.lots), tone: 'neutral' },
-    { id: 'profit', label: 'Toplam kâr', value: formatNumber(Math.max(...table.values) - table.values[0]), tone: 'positive' }
+    { id: 'start', label: 'BaÅŸlangÄ±Ã§', value: formatNumber(table.initialPrice * table.lots), tone: 'neutral' },
+    { id: 'profit', label: 'Toplam kÃ¢r', value: formatNumber(Math.max(...table.values) - table.values[0]), tone: 'positive' }
   ],
   columns: [
-    { id: 'period', label: 'Dönem' },
-    { id: 'value', label: 'Tahmini değer', highlight: true },
-    { id: 'gain', label: 'Günlük kazanç' },
-    { id: 'total', label: 'Toplam kâr', highlight: true }
+    { id: 'period', label: 'DÃ¶nem' },
+    { id: 'value', label: 'Tahmini deÄŸer', highlight: true },
+    { id: 'gain', label: 'GÃ¼nlÃ¼k kazanÃ§' },
+    { id: 'total', label: 'Toplam kÃ¢r', highlight: true }
   ],
   rows: buildProfitDetails(table.values).map((row) => ({
     id: `${table.id}-${row.label}`,
@@ -209,7 +208,7 @@ const ShareActions = ({ table }: ShareActionsProps) => {
   return (
     <>
       <div className="action-row">
-        <button onClick={shareImage} disabled={isSharing}>{isSharing ? 'Hazırlanıyor...' : 'Paylaş'}</button>
+        <button onClick={shareImage} disabled={isSharing}>{isSharing ? 'HazÄ±rlanÄ±yor...' : 'PaylaÅŸ'}</button>
         <button className="secondary" onClick={downloadImage} disabled={isSharing}>PNG indir</button>
       </div>
       {shareStatus && <p className="success-text">{shareStatus}</p>}
@@ -255,7 +254,11 @@ const App = () => {
   const [publishedTables, setPublishedTables] = useState<SharedTable[]>([]);
   const [publishedError, setPublishedError] = useState('');
   const [isPublishedLoading, setIsPublishedLoading] = useState(true);
-  const [adminTables, setAdminTables] = useState<SharedTable[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const stored = window.localStorage.getItem('favoriteTableIds');
+    return stored ? JSON.parse(stored) : [];
+  });
   const [adminError, setAdminError] = useState('');
   const [adminSecret, setAdminSecret] = useState(() => {
     if (typeof window === 'undefined') return '';
@@ -263,7 +266,7 @@ const App = () => {
   });
   const [adminSecretInput, setAdminSecretInput] = useState('');
   const [isAdminLoading, setIsAdminLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   useEffect(() => {
     const beforeInstallPromptHandler = (event: Event) => {
@@ -295,7 +298,7 @@ const App = () => {
     setDeferredPrompt(null);
   };
 
-  const saveTable = () => {
+  const saveTable = async () => {
     const cleanedName = tableName.trim() || `Tablo ${savedTables.length + 1}`;
     const newTable: SavedTable = {
       id: Date.now(),
@@ -310,6 +313,20 @@ const App = () => {
     window.localStorage.setItem('savedTables', JSON.stringify(nextTables));
     setSelectedTableId(newTable.id);
     setActiveTab('saved');
+
+    if (canUseAdminOnThisPc && adminSecret) {
+      setIsPublishing(true);
+      setAdminError('');
+
+      try {
+        await saveSharedTable(savedTableToShareable(newTable), adminSecret);
+        await loadPublishedTables();
+      } catch (error) {
+        setAdminError(error instanceof Error ? error.message : 'Tablo yayÄ±nlanamadÄ±.');
+      } finally {
+        setIsPublishing(false);
+      }
+    }
   };
 
   const updateTablePrice = (tableId: number, nextPrice: string) => {
@@ -362,7 +379,7 @@ const App = () => {
   const selectedTable = savedTables.find((table) => table.id === selectedTableId) ?? savedTables[0] ?? null;
 
   const saveProfitTable = () => {
-    const cleanedName = profitName.trim() || `Kâr ${savedProfitTables.length + 1}`;
+    const cleanedName = profitName.trim() || `KÃ¢r ${savedProfitTables.length + 1}`;
     const lotsValue = Number(profitLots) || 0;
     const priceValue = parseDecimalValue(profitPrice);
     const newTable: SavedProfitTable = {
@@ -436,7 +453,7 @@ const App = () => {
     try {
       setPublishedTables(await fetchPublishedTables());
     } catch (error) {
-      setPublishedError(error instanceof Error ? error.message : 'Yayınlanan tablolar alınamadı.');
+      setPublishedError(error instanceof Error ? error.message : 'YayÄ±nlanan tablolar alÄ±namadÄ±.');
     } finally {
       setIsPublishedLoading(false);
     }
@@ -453,9 +470,9 @@ const App = () => {
       setAdminSecret(nextSecret);
       window.localStorage.setItem('pcAdminSecret', nextSecret);
       setAdminSecretInput('');
-      setAdminTables(await fetchAdminTables(nextSecret));
+      setActiveTab('builder');
     } catch (error) {
-      setAdminError(error instanceof Error ? error.message : 'Admin şifresi doğrulanamadı.');
+      setAdminError(error instanceof Error ? error.message : 'Admin ÅŸifresi doÄŸrulanamadÄ±.');
     } finally {
       setIsAdminLoading(false);
     }
@@ -464,56 +481,18 @@ const App = () => {
   const deactivateAdmin = () => {
     setAdminSecret('');
     setAdminSecretInput('');
-    setAdminTables([]);
+    setActiveTab('published');
     window.localStorage.removeItem('pcAdminSecret');
   };
 
-  const loadAdminTables = async () => {
-    if (!canUseAdminOnThisPc || !adminSecret) return;
-    setIsAdminLoading(true);
-    setAdminError('');
+  const toggleFavorite = (tableId: string) => {
+    const nextFavoriteIds = favoriteIds.includes(tableId)
+      ? favoriteIds.filter((id) => id !== tableId)
+      : [...favoriteIds, tableId];
 
-    try {
-      setAdminTables(await fetchAdminTables(adminSecret));
-    } catch (error) {
-      setAdminError(error instanceof Error ? error.message : 'Admin tabloları alınamadı.');
-    } finally {
-      setIsAdminLoading(false);
-    }
+    setFavoriteIds(nextFavoriteIds);
+    window.localStorage.setItem('favoriteTableIds', JSON.stringify(nextFavoriteIds));
   };
-
-  const handleAdminSave = async (table: SharedTableDraft) => {
-    if (!canUseAdminOnThisPc || !adminSecret) return;
-    setIsSaving(true);
-    setAdminError('');
-
-    try {
-      await saveSharedTable(table, adminSecret);
-      await loadAdminTables();
-      await loadPublishedTables();
-    } catch (error) {
-      setAdminError(error instanceof Error ? error.message : 'Tablo kaydedilemedi.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleAdminDelete = async (id: string) => {
-    if (!canUseAdminOnThisPc || !adminSecret || !window.confirm('Bu tablo silinsin mi?')) return;
-    setIsSaving(true);
-    setAdminError('');
-
-    try {
-      await deleteSharedTable(id, adminSecret);
-      await loadAdminTables();
-      await loadPublishedTables();
-    } catch (error) {
-      setAdminError(error instanceof Error ? error.message : 'Tablo silinemedi.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   useEffect(() => {
     void loadPublishedTables();
   }, []);
@@ -524,22 +503,16 @@ const App = () => {
     }
   }, [activeTab]);
 
-  useEffect(() => {
-    if (activeTab === 'admin' && canUseAdminOnThisPc && adminSecret) {
-      void loadAdminTables();
-    }
-  }, [activeTab, canUseAdminOnThisPc, adminSecret]);
-
   return (
     <div className="app-shell">
       <header>
         <div className="header-row">
           <div>
-            <h1>Hisse Tablosu Planlayıcı</h1>
-            <p>Başlangıç hisse miktarını girin, tabloyu oluşturun, kaydedin ve paylaşın.</p>
+            <h1>Hisse Tablosu PlanlayÄ±cÄ±</h1>
+            <p>BaÅŸlangÄ±Ã§ hisse miktarÄ±nÄ± girin, tabloyu oluÅŸturun, kaydedin ve paylaÅŸÄ±n.</p>
           </div>
           {canInstall && (
-            <button onClick={handleInstallClick}>Uygulamayı yükle</button>
+            <button onClick={handleInstallClick}>UygulamayÄ± yÃ¼kle</button>
           )}
         </div>
       </header>
@@ -548,58 +521,72 @@ const App = () => {
         <button className={activeTab === 'published' ? 'tab active' : 'tab'} onClick={() => setActiveTab('published')}>
           Yayın
         </button>
-        <button className={activeTab === 'builder' ? 'tab active' : 'tab'} onClick={() => setActiveTab('builder')}>
-          Tablo Oluştur
+        <button className={activeTab === 'favorites' ? 'tab active' : 'tab'} onClick={() => setActiveTab('favorites')}>
+          Favoriler
         </button>
-        <button className={activeTab === 'saved' ? 'tab active' : 'tab'} onClick={() => setActiveTab('saved')}>
-          Tablolarım
-        </button>
-        <button className={activeTab === 'profit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('profit')}>
-          Kâr
-        </button>
-        <button className={activeTab === 'savedProfit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('savedProfit')}>
-          Kar Tablolarım
-        </button>
+        {canUseAdminOnThisPc && adminSecret && (
+          <>
+            <button className={activeTab === 'builder' ? 'tab active' : 'tab'} onClick={() => setActiveTab('builder')}>
+              Tablo Oluştur
+            </button>
+            <button className={activeTab === 'saved' ? 'tab active' : 'tab'} onClick={() => setActiveTab('saved')}>
+              Tablolarım
+            </button>
+          </>
+        )}
         {canUseAdminOnThisPc && (
           <button className={activeTab === 'admin' ? 'tab active' : 'tab'} onClick={() => setActiveTab('admin')}>
             Yönetim
           </button>
         )}
       </nav>
-
       {activeTab === 'published' && (
         <PublicTables
           error={publishedError}
           isLoading={isPublishedLoading}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
           onRefresh={loadPublishedTables}
           tables={publishedTables}
         />
       )}
 
-      {activeTab === 'builder' && (
+      {activeTab === 'favorites' && (
+        <PublicTables
+          error={publishedError}
+          isLoading={isPublishedLoading}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
+          onRefresh={loadPublishedTables}
+          tables={publishedTables.filter((table) => favoriteIds.includes(table.id))}
+        />
+      )}
+
+      {activeTab === 'builder' && canUseAdminOnThisPc && adminSecret && (
         <>
           <section className="card">
-            <h2>Yeni tablo oluştur</h2>
+            <h2>Yeni tablo oluÅŸtur</h2>
             <div className="grid">
               <label>
-                Tablo adı
+                Tablo adÄ±
                 <input value={tableName} onChange={(e) => setTableName(e.target.value)} />
               </label>
               <label>
-                Başlangıç hisse miktarı
+                BaÅŸlangÄ±Ã§ hisse miktarÄ±
                 <input type="text" inputMode="numeric" value={formatIntegerValue(initialAmount)} onChange={(e) => setInitialAmount(e.target.value.replace(/\D/g, ''))} />
               </label>
               <label>
-                Birim fiyatı
-                <input type="text" inputMode="decimal" value={formatDecimalValue(price)} onChange={(e) => setPrice(sanitizeDecimalInput(e.target.value))} placeholder="İsteğe bağlı" />
+                Birim fiyatÄ±
+                <input type="text" inputMode="decimal" value={formatDecimalValue(price)} onChange={(e) => setPrice(sanitizeDecimalInput(e.target.value))} placeholder="Ä°steÄŸe baÄŸlÄ±" />
               </label>
             </div>
-            <button onClick={saveTable}>Tabloyu kaydet</button>
+            <button onClick={saveTable} disabled={isPublishing}>{isPublishing ? 'Yayınlanıyor...' : 'Tabloyu yayınla'}</button>
+            {adminError && <p className="error-text">{adminError}</p>}
           </section>
 
           <section className="card">
-            <h2>Oluşturulan tablo</h2>
-            <p className="hint">Y ekseni değerleri: %40'tan %100'e 5 puan aralıklarla. X ekseni değerleri: 500k'den 1M'e 50k adımlarla.</p>
+            <h2>OluÅŸturulan tablo</h2>
+            <p className="hint">Y ekseni deÄŸerleri: %40'tan %100'e 5 puan aralÄ±klarla. X ekseni deÄŸerleri: 500k'den 1M'e 50k adÄ±mlarla.</p>
             <div className="table-wrap">
               <table>
                 <thead>
@@ -626,23 +613,23 @@ const App = () => {
         </>
       )}
 
-      {activeTab === 'saved' && (
+      {activeTab === 'saved' && canUseAdminOnThisPc && adminSecret && (
         <>
           <section className="card">
-            <h2>Tablolarım</h2>
+            <h2>TablolarÄ±m</h2>
             {savedTables.length === 0 ? (
-              <p>Henüz kaydedilmiş tablo yok. Önce Tablo Oluştur sekmesinden bir tane kaydedin.</p>
+              <p>HenÃ¼z kaydedilmiÅŸ tablo yok. Ã–nce Tablo OluÅŸtur sekmesinden bir tane kaydedin.</p>
             ) : (
               <div className="saved-list">
                 {savedTables.map((table) => (
                   <div key={table.id} className={selectedTable?.id === table.id ? 'saved-item selected' : 'saved-item'}>
                     <button className="saved-main" onClick={() => setSelectedTableId(table.id)}>
                       <strong>{table.name}</strong>
-                      <span>Başlangıç: {formatIntegerValue(table.initialAmount)}</span>
-                      <span>Fiyat: {parseDecimalValue(table.price) ? formatDecimalValue(table.price) : 'Ayarlanmadı'}</span>
+                      <span>BaÅŸlangÄ±Ã§: {formatIntegerValue(table.initialAmount)}</span>
+                      <span>Fiyat: {parseDecimalValue(table.price) ? formatDecimalValue(table.price) : 'AyarlanmadÄ±'}</span>
                     </button>
                     <div className="saved-actions">
-                      <button className="secondary" onClick={() => startEditingTable(table)}>Düzenle</button>
+                      <button className="secondary" onClick={() => startEditingTable(table)}>DÃ¼zenle</button>
                       <button className="danger" onClick={() => deleteTable(table.id)}>Sil</button>
                     </div>
                   </div>
@@ -656,7 +643,7 @@ const App = () => {
               <h2>{selectedTable.name}</h2>
               <div className="editor-row">
                 <label>
-                  Birim fiyatı
+                  Birim fiyatÄ±
                   <input type="text" inputMode="decimal" value={formatDecimalValue(selectedTable.price || '')} onChange={(e) => updateTablePrice(selectedTable.id, e.target.value)} />
                 </label>
                 <label>
@@ -664,15 +651,15 @@ const App = () => {
                   <input value={editingTableId === selectedTable.id ? editName : selectedTable.name} onChange={(e) => setEditName(e.target.value)} />
                 </label>
                 <label>
-                  Başlangıç miktarı
+                  BaÅŸlangÄ±Ã§ miktarÄ±
                   <input type="text" inputMode="numeric" value={editingTableId === selectedTable.id ? formatIntegerValue(editAmount) : formatIntegerValue(selectedTable.initialAmount)} onChange={(e) => setEditAmount(e.target.value.replace(/\D/g, ''))} />
                 </label>
               </div>
               <div className="action-row">
                 {editingTableId === selectedTable.id ? (
-                  <button onClick={() => saveEditedTable(selectedTable.id)}>Değişiklikleri kaydet</button>
+                  <button onClick={() => saveEditedTable(selectedTable.id)}>DeÄŸiÅŸiklikleri kaydet</button>
                 ) : (
-                  <button onClick={() => startEditingTable(selectedTable)}>Detayları düzenle</button>
+                  <button onClick={() => startEditingTable(selectedTable)}>DetaylarÄ± dÃ¼zenle</button>
                 )}
                 <button className="danger" onClick={() => deleteTable(selectedTable.id)}>Tabloyu sil</button>
               </div>
@@ -713,15 +700,15 @@ const App = () => {
       {activeTab === 'profit' && (
         <>
           <section className="card">
-            <h2>Yeni kâr büyüme tablosu oluştur</h2>
-            <p className="hint">Başlangıç tutarı lot × başlangıç fiyatı olarak hesaplanır. Sonraki her gün %10 kümülatif olarak büyür.</p>
+            <h2>Yeni kÃ¢r bÃ¼yÃ¼me tablosu oluÅŸtur</h2>
+            <p className="hint">BaÅŸlangÄ±Ã§ tutarÄ± lot Ã— baÅŸlangÄ±Ã§ fiyatÄ± olarak hesaplanÄ±r. Sonraki her gÃ¼n %10 kÃ¼mÃ¼latif olarak bÃ¼yÃ¼r.</p>
             <div className="grid">
               <label>
-                Kâr tablosu adı
+                KÃ¢r tablosu adÄ±
                 <input value={profitName} onChange={(e) => setProfitName(e.target.value)} />
               </label>
               <label>
-                Başlangıç fiyatı
+                BaÅŸlangÄ±Ã§ fiyatÄ±
                 <input type="text" inputMode="decimal" value={formatDecimalValue(profitPrice)} onChange={(e) => setProfitPrice(sanitizeDecimalInput(e.target.value))} />
               </label>
               <label>
@@ -729,22 +716,22 @@ const App = () => {
                 <input type="text" inputMode="numeric" value={formatIntegerValue(profitLots)} onChange={(e) => setProfitLots(e.target.value.replace(/\D/g, ''))} />
               </label>
             </div>
-            <button onClick={saveProfitTable}>Kâr tablosunu kaydet</button>
+            <button onClick={saveProfitTable}>KÃ¢r tablosunu kaydet</button>
           </section>
 
           <section className="card">
-            <h2>Tahmini büyüme</h2>
+            <h2>Tahmini bÃ¼yÃ¼me</h2>
             <div className="profit-summary">
-              <strong>Başlangıç tutarı:</strong> {formatNumber(parseIntegerValue(profitLots) * parseDecimalValue(profitPrice))}
+              <strong>BaÅŸlangÄ±Ã§ tutarÄ±:</strong> {formatNumber(parseIntegerValue(profitLots) * parseDecimalValue(profitPrice))}
             </div>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Dönem</th>
-                    <th>Tahmini değer</th>
-                    <th>Günlük kazanç</th>
-                    <th>Toplam kâr</th>
+                    <th>DÃ¶nem</th>
+                    <th>Tahmini deÄŸer</th>
+                    <th>GÃ¼nlÃ¼k kazanÃ§</th>
+                    <th>Toplam kÃ¢r</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -752,8 +739,8 @@ const App = () => {
                     <tr key={row.label}>
                       <td>{row.label}</td>
                       <td>{formatNumber(row.value)}</td>
-                      <td>{row.change === 0 ? '—' : `+${formatNumber(row.change)}`}</td>
-                      <td>{row.totalProfit === 0 ? '—' : `+${formatNumber(row.totalProfit)}`}</td>
+                      <td>{row.change === 0 ? 'â€”' : `+${formatNumber(row.change)}`}</td>
+                      <td>{row.totalProfit === 0 ? 'â€”' : `+${formatNumber(row.totalProfit)}`}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -766,9 +753,9 @@ const App = () => {
       {activeTab === 'savedProfit' && (
         <>
           <section className="card">
-            <h2>Kar Tablolarım</h2>
+            <h2>Kar TablolarÄ±m</h2>
             {savedProfitTables.length === 0 ? (
-              <p>Henüz kaydedilmiş kâr tablosu yok. Önce Kâr sekmesinden bir tane oluşturun.</p>
+              <p>HenÃ¼z kaydedilmiÅŸ kÃ¢r tablosu yok. Ã–nce KÃ¢r sekmesinden bir tane oluÅŸturun.</p>
             ) : (
               <div className="saved-list">
                 {savedProfitTables.map((table) => (
@@ -777,10 +764,10 @@ const App = () => {
                       <strong>{table.name}</strong>
                       <span>Fiyat: {formatDecimalValue(table.initialPrice)}</span>
                       <span>Lot: {formatIntegerValue(table.lots)}</span>
-                      <span>Başlangıç tutarı: {formatNumber(table.initialPrice * table.lots)}</span>
+                      <span>BaÅŸlangÄ±Ã§ tutarÄ±: {formatNumber(table.initialPrice * table.lots)}</span>
                     </button>
                     <div className="saved-actions">
-                      <button className="secondary" onClick={() => startEditingProfitTable(table)}>Düzenle</button>
+                      <button className="secondary" onClick={() => startEditingProfitTable(table)}>DÃ¼zenle</button>
                       <button className="danger" onClick={() => deleteProfitTable(table.id)}>Sil</button>
                     </div>
                   </div>
@@ -798,7 +785,7 @@ const App = () => {
                   <input value={editingProfitId === selectedProfitTable.id ? editProfitName : selectedProfitTable.name} onChange={(e) => setEditProfitName(e.target.value)} />
                 </label>
                 <label>
-                  Başlangıç fiyatı
+                  BaÅŸlangÄ±Ã§ fiyatÄ±
                   <input type="text" inputMode="decimal" value={editingProfitId === selectedProfitTable.id ? formatDecimalValue(editProfitPrice) : formatDecimalValue(selectedProfitTable.initialPrice)} onChange={(e) => setEditProfitPrice(sanitizeDecimalInput(e.target.value))} />
                 </label>
                 <label>
@@ -808,9 +795,9 @@ const App = () => {
               </div>
               <div className="action-row">
                 {editingProfitId === selectedProfitTable.id ? (
-                  <button onClick={() => saveEditedProfitTable(selectedProfitTable.id)}>Değişiklikleri kaydet</button>
+                  <button onClick={() => saveEditedProfitTable(selectedProfitTable.id)}>DeÄŸiÅŸiklikleri kaydet</button>
                 ) : (
-                  <button onClick={() => startEditingProfitTable(selectedProfitTable)}>Detayları düzenle</button>
+                  <button onClick={() => startEditingProfitTable(selectedProfitTable)}>DetaylarÄ± dÃ¼zenle</button>
                 )}
                 <button className="danger" onClick={() => deleteProfitTable(selectedProfitTable.id)}>Tabloyu sil</button>
               </div>
@@ -819,10 +806,10 @@ const App = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th>Dönem</th>
-                      <th>Tahmini değer</th>
-                      <th>Günlük kazanç</th>
-                      <th>Toplam kâr</th>
+                      <th>DÃ¶nem</th>
+                      <th>Tahmini deÄŸer</th>
+                      <th>GÃ¼nlÃ¼k kazanÃ§</th>
+                      <th>Toplam kÃ¢r</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -830,8 +817,8 @@ const App = () => {
                       <tr key={`${selectedProfitTable.id}-${row.label}`}>
                         <td>{row.label}</td>
                         <td>{formatNumber(row.value)}</td>
-                        <td>{row.change === 0 ? '—' : `+${formatNumber(row.change)}`}</td>
-                        <td>{row.totalProfit === 0 ? '—' : `+${formatNumber(row.totalProfit)}`}</td>
+                        <td>{row.change === 0 ? 'â€”' : `+${formatNumber(row.change)}`}</td>
+                        <td>{row.totalProfit === 0 ? 'â€”' : `+${formatNumber(row.totalProfit)}`}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -844,17 +831,17 @@ const App = () => {
 
       {activeTab === 'admin' && canUseAdminOnThisPc && !adminSecret && (
         <section className="card empty-state">
-          <h2>Admin girişi</h2>
-          <p>Bu bölüm yalnızca bu PC'de görünür. Varsayılan şifre: local-dev-admin</p>
+          <h2>Admin giriÅŸi</h2>
+          <p>Bu bÃ¶lÃ¼m yalnÄ±zca bu PC'de gÃ¶rÃ¼nÃ¼r. VarsayÄ±lan ÅŸifre: local-dev-admin</p>
           <div className="action-row">
             <input
               type="password"
               value={adminSecretInput}
               onChange={(event) => setAdminSecretInput(event.target.value)}
-              placeholder="Admin şifresi"
+              placeholder="Admin ÅŸifresi"
             />
             <button onClick={handleAdminSecretSubmit} disabled={isAdminLoading || !adminSecretInput.trim()}>
-              {isAdminLoading ? 'Kontrol ediliyor...' : 'Admini aç'}
+              {isAdminLoading ? 'Kontrol ediliyor...' : 'Admini aÃ§'}
             </button>
           </div>
           {adminError && <p className="error-text">{adminError}</p>}
@@ -862,16 +849,13 @@ const App = () => {
       )}
 
       {activeTab === 'admin' && canUseAdminOnThisPc && adminSecret && (
-        <AdminPanel
-          error={adminError}
-          isLoading={isAdminLoading}
-          isSaving={isSaving}
-          onDeactivate={deactivateAdmin}
-          onDelete={handleAdminDelete}
-          onRefresh={loadAdminTables}
-          onSave={handleAdminSave}
-          tables={adminTables}
-        />
+        <section className="card empty-state">
+          <h2>Admin açık</h2>
+          <p>Tablo oluşturmak için alttaki Tablo Oluştur sekmesini kullan. Kaydettiğin tablo otomatik olarak yayınlanır.</p>
+          <button className="secondary" onClick={() => setActiveTab('builder')}>Tablo Oluştur</button>
+          <button className="danger" onClick={deactivateAdmin}>Admini kapat</button>
+          {adminError && <p className="error-text">{adminError}</p>}
+        </section>
       )}
     </div>
   );
