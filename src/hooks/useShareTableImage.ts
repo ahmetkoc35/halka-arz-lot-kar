@@ -1,10 +1,16 @@
 import { RefObject, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { toPng } from 'html-to-image';
 
 import type { SharedTable } from '../types/sharedTable';
+
+type GallerySaverPlugin = {
+  savePng: (options: { fileName: string; data: string }) => Promise<{ uri: string }>;
+};
+
+const GallerySaver = registerPlugin<GallerySaverPlugin>('GallerySaver');
 
 const createFileName = (table: SharedTable) => {
   const normalized = table.title
@@ -84,14 +90,11 @@ export const useShareTableImage = (cardRef: RefObject<HTMLElement>, table: Share
       const dataUrl = await createImageDataUrl();
 
       if (Capacitor.isNativePlatform()) {
-        const uri = await writeNativeFile(dataUrl, fileName);
-        await Share.share({
-          title: table.title,
-          text: 'PNG hazır. Kaydetmek için paylaşım menüsünden uygun uygulamayı seçebilirsiniz.',
-          url: uri,
-          dialogTitle: 'PNG indir veya paylaş'
+        await GallerySaver.savePng({
+          fileName,
+          data: dataUrlToBase64(dataUrl)
         });
-        setShareStatus('PNG hazırlandı.');
+        setShareStatus('PNG galeriye kaydedildi.');
         return;
       }
 

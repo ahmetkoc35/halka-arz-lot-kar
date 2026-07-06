@@ -8,6 +8,18 @@ type ShareableTableCardProps = {
 };
 
 export const ShareableTableCard = forwardRef<HTMLDivElement, ShareableTableCardProps>(({ table }, ref) => {
+  const summaryCards = table.summaryCards.map((card) => {
+    if (card.id !== 'profit') {
+      return card;
+    }
+
+    return {
+      ...card,
+      label: 'Son tahmini değer',
+      value: table.rows[table.rows.length - 1]?.cells.value ?? card.value
+    };
+  });
+
   return (
     <div className="share-card" ref={ref}>
       <div className="share-card__shine" />
@@ -19,7 +31,7 @@ export const ShareableTableCard = forwardRef<HTMLDivElement, ShareableTableCardP
       {table.subtitle && <p>{table.subtitle}</p>}
 
       <div className="share-card__summary">
-        {table.summaryCards.map((card) => (
+        {summaryCards.map((card) => (
           <div className={`share-card__summary-item ${card.tone}`} key={card.id}>
             <span>{card.label}</span>
             <strong>{card.value}</strong>
