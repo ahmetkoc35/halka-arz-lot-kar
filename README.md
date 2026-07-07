@@ -29,6 +29,8 @@ Publishing a table updates `public/published-tables.json`, commits it, and pushe
 
 Published tables can be created, but the app does not expose a published-table delete action.
 
+Published tables are read from the public GitHub raw JSON file so the app does not depend on GitHub's stricter unauthenticated API rate limit.
+
 ## Build Checks
 
 ```bash

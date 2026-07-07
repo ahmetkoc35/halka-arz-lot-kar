@@ -1,7 +1,7 @@
 import type { SharedTable, SharedTableDraft, TableResponse, TablesResponse } from '../types/sharedTable';
 
 const DEFAULT_PUBLIC_TABLES_URL =
-  'https://api.github.com/repos/ahmetkoc35/halka-arz-lot-kar/contents/public/published-tables.json?ref=main';
+  'https://raw.githubusercontent.com/ahmetkoc35/halka-arz-lot-kar/main/public/published-tables.json';
 const PUBLIC_TABLES_URL = import.meta.env.VITE_PUBLIC_TABLES_URL ?? DEFAULT_PUBLIC_TABLES_URL;
 const ADMIN_API_BASE_URL = (import.meta.env.VITE_ADMIN_API_BASE_URL ?? '').replace(/\/$/, '');
 
