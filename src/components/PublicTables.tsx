@@ -41,14 +41,16 @@ const PublicTableItem = ({ deleteLabel = 'Sil', isFavorite, onDeleteTable, onTog
         <em>{formatDate(table.updatedAt)}</em>
       </button>
 
-      <div className="summary-grid">
-        {table.summaryCards.map((card) => (
-          <div className={`summary-card ${card.tone}`} key={card.id}>
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-          </div>
-        ))}
-      </div>
+      {table.summaryCards.length > 0 && (
+        <div className="summary-grid">
+          {table.summaryCards.map((card) => (
+            <div className={`summary-card ${card.tone}`} key={card.id}>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+            </div>
+          ))}
+        </div>
+      )}
 
       {isOpen && (
         <div className="table-wrap compact">

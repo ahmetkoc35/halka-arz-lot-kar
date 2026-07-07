@@ -169,19 +169,13 @@ const stockDraftToShareable = (table: StockDraft): SharedTable => {
 };
 
 const profitDraftToShareable = (table: ProfitDraft): SharedTable => {
-  const lastValue = table.values[table.values.length - 1] ?? 0;
-  const lastPrice = table.lots ? lastValue / table.lots : 0;
-
   return {
     id: String(table.id),
     title: table.name,
-    subtitle: `${formatIntegerValue(table.lots)} lot × ${formatDecimalValue(table.initialPrice)}`,
+    subtitle: 'Kâr tablosu',
     updatedAt: new Date().toISOString(),
     published: true,
-    summaryCards: [
-      { id: 'start', label: 'Başlangıç', value: formatNumber(table.initialPrice * table.lots), tone: 'neutral' },
-      { id: 'last-price', label: 'Son fiyat', value: formatDecimalValue(lastPrice), tone: 'positive' }
-    ],
+    summaryCards: [],
     columns: [
       { id: 'period', label: 'Dönem' },
       { id: 'value', label: 'Tahmini değer', highlight: true },
@@ -553,7 +547,7 @@ const App = () => {
         </>
       )}
 
-      {activeTab === 'profit' && canUseAdminOnThisPc && adminSecret && (
+      {activeTab === 'profit' && (
         <>
           <section className="card">
             <h2>Kâr tablosu oluştur</h2>
