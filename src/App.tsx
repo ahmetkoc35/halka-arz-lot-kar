@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { PublicTables } from './components/PublicTables';
-import { fetchAdminTables, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
+import { deleteSharedTable, fetchAdminTables, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
 import type { SharedTable } from './types/sharedTable';
 
 type TabName = 'published' | 'favorites' | 'profit' | 'myTables' | 'builder' | 'manage' | 'admin';
@@ -412,6 +412,26 @@ const App = () => {
     window.localStorage.setItem('localProfitTables', JSON.stringify(nextTables));
   };
 
+  const deletePublishedTable = async (tableId: string) => {
+    if (!canUseAdminOnThisPc || !adminSecret || !window.confirm('Bu yayınlanan tablo silinsin mi?')) return;
+    setIsPublishing(true);
+    setAdminError('');
+
+    try {
+      await deleteSharedTable(tableId, adminSecret);
+      setPublishedTables((currentTables) => currentTables.filter((table) => table.id !== tableId));
+      setFavoriteIds((currentIds) => {
+        const nextIds = currentIds.filter((id) => id !== tableId);
+        window.localStorage.setItem('favoriteTableIds', JSON.stringify(nextIds));
+        return nextIds;
+      });
+    } catch (error) {
+      setAdminError(error instanceof Error ? error.message : 'Tablo silinemedi.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="app-shell">
       <header>
@@ -625,10 +645,15 @@ const App = () => {
             <div className="saved-list">
               {publishedTables.map((table) => (
                 <div className="saved-item" key={table.id}>
-                  <button className="saved-main" onClick={() => setActiveTab('published')}>
+                  <div className="saved-main">
                     <strong>{table.title}</strong>
                     {table.subtitle && <span>{table.subtitle}</span>}
-                  </button>
+                  </div>
+                  <div className="saved-actions">
+                    <button className="danger" onClick={() => deletePublishedTable(table.id)} disabled={isPublishing}>
+                      Sil
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

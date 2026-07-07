@@ -62,6 +62,15 @@ export const saveSharedTable = async (table: SharedTableDraft, adminToken: strin
   return data.table;
 };
 
+export const deleteSharedTable = async (id: string, adminToken: string) => {
+  await parseJson<{ ok: boolean }>(
+    await fetch(adminApiUrl(`/api/tables/${encodeURIComponent(id)}`), {
+      method: 'DELETE',
+      headers: { 'x-admin-secret': adminToken }
+    })
+  );
+};
+
 export const verifyAdminSecret = async (secret: string) => {
   await parseJson<{ ok: boolean }>(
     await fetch(adminApiUrl('/api/admin/verify'), {

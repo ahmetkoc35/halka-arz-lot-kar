@@ -135,6 +135,20 @@ const localGithubPublisher = (localAdminSecret: string) => ({
           sendJson(response, 200, { table });
           return;
         }
+
+        if (url.pathname.startsWith('/api/tables/') && method === 'DELETE') {
+          if (!isAdminRequest(secret, localAdminSecret)) {
+            sendJson(response, 401, { error: 'Admin yetkisi gerekli.' });
+            return;
+          }
+
+          const id = decodeURIComponent(url.pathname.replace('/api/tables/', ''));
+          const tables = await readTables();
+          await writeTables(tables.filter((table) => table.id !== id));
+          await publishTables();
+          sendJson(response, 200, { ok: true });
+          return;
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'İşlem tamamlanamadı.';
         sendJson(response, 500, { error: message });
