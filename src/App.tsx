@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { PublicTables } from './components/PublicTables';
-import { deleteSharedTable, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
+import { fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
 import type { SharedTable } from './types/sharedTable';
 
 type TabName = 'published' | 'favorites' | 'profit' | 'myTables' | 'builder' | 'manage' | 'admin';
@@ -386,26 +386,6 @@ const App = () => {
     window.localStorage.setItem('localProfitTables', JSON.stringify(nextTables));
   };
 
-  const deletePublishedTable = async (tableId: string) => {
-    if (!canUseAdminOnThisPc || !adminSecret || !window.confirm('Bu yayınlanan tablo silinsin mi?')) return;
-    setIsPublishing(true);
-    setAdminError('');
-
-    try {
-      await deleteSharedTable(tableId, adminSecret);
-      setFavoriteIds((currentIds) => {
-        const nextIds = currentIds.filter((id) => id !== tableId);
-        window.localStorage.setItem('favoriteTableIds', JSON.stringify(nextIds));
-        return nextIds;
-      });
-      await loadPublishedTables();
-    } catch (error) {
-      setAdminError(error instanceof Error ? error.message : 'Tablo silinemedi.');
-    } finally {
-      setIsPublishing(false);
-    }
-  };
-
   return (
     <div className="app-shell">
       <header>
@@ -623,11 +603,6 @@ const App = () => {
                     <strong>{table.title}</strong>
                     {table.subtitle && <span>{table.subtitle}</span>}
                   </button>
-                  <div className="saved-actions">
-                    <button className="danger" onClick={() => deletePublishedTable(table.id)} disabled={isPublishing}>
-                      Sil
-                    </button>
-                  </div>
                 </div>
               ))}
             </div>
@@ -639,7 +614,7 @@ const App = () => {
       {activeTab === 'admin' && canUseAdminOnThisPc && !adminSecret && (
         <section className="card empty-state">
           <h2>Admin girişi</h2>
-          <p>Bu bölüm yalnızca bu PC'de görünür. Varsayılan şifre: A1hmet.koc</p>
+          <p>Bu bölüm yalnızca bu PC'de görünür. Şifre bu bilgisayardaki özel .env dosyasından okunur.</p>
           <div className="action-row">
             <input
               type="password"

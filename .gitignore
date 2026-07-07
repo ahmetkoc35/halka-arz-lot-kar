@@ -1,6 +1,10 @@
 # Node dependencies
 node_modules/
 
+# Local secrets
+.env
+.env.local
+
 # Build outputs
 dist/
 android/app/build/
@@ -16,6 +20,7 @@ android/app/src/main/assets/public/
 
 # TypeScript caches
 *.tsbuildinfo
+vite.config.js
 
 # Logs
 npm-debug.log*

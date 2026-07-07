@@ -4,7 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { defineConfig, type ViteDevServer } from 'vite';
+import { defineConfig, loadEnv, type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
 type SharedTable = {
@@ -24,7 +24,6 @@ type SharedTableDraft = Omit<SharedTable, 'id' | 'updatedAt'> & {
 
 const execFileAsync = promisify(execFile);
 const dataPath = resolve(process.cwd(), 'public/published-tables.json');
-const localAdminSecret = process.env.ADMIN_SECRET || 'A1hmet.koc';
 
 const sendJson = (response: ServerResponse, status: number, data: unknown) => {
   response.statusCode = status;
@@ -80,10 +79,10 @@ const cleanDraft = (draft: SharedTableDraft): SharedTable => ({
   published: Boolean(draft.published)
 });
 
-const isAdminRequest = (secret: string | string[] | undefined) =>
-  typeof secret === 'string' && secret === localAdminSecret;
+const isAdminRequest = (secret: string | string[] | undefined, localAdminSecret: string) =>
+  Boolean(localAdminSecret) && typeof secret === 'string' && secret === localAdminSecret;
 
-const localGithubPublisher = () => ({
+const localGithubPublisher = (localAdminSecret: string) => ({
   name: 'local-github-table-publisher',
   configureServer(server: ViteDevServer) {
     server.middlewares.use(async (request, response, next) => {
@@ -93,7 +92,7 @@ const localGithubPublisher = () => ({
 
       try {
         if (url.pathname === '/api/admin/verify' && method === 'POST') {
-          if (!isAdminRequest(secret)) {
+          if (!isAdminRequest(secret, localAdminSecret)) {
             sendJson(response, 401, { error: 'Admin şifresi hatalı.' });
             return;
           }
@@ -106,7 +105,7 @@ const localGithubPublisher = () => ({
           const tables = await readTables();
           const includeUnpublished = url.searchParams.get('includeUnpublished') === '1';
 
-          if (includeUnpublished && !isAdminRequest(secret)) {
+          if (includeUnpublished && !isAdminRequest(secret, localAdminSecret)) {
             sendJson(response, 401, { error: 'Admin yetkisi gerekli.' });
             return;
           }
@@ -118,7 +117,7 @@ const localGithubPublisher = () => ({
         }
 
         if (url.pathname === '/api/tables' && method === 'POST') {
-          if (!isAdminRequest(secret)) {
+          if (!isAdminRequest(secret, localAdminSecret)) {
             sendJson(response, 401, { error: 'Admin yetkisi gerekli.' });
             return;
           }
@@ -136,20 +135,6 @@ const localGithubPublisher = () => ({
           sendJson(response, 200, { table });
           return;
         }
-
-        if (url.pathname.startsWith('/api/tables/') && method === 'DELETE') {
-          if (!isAdminRequest(secret)) {
-            sendJson(response, 401, { error: 'Admin yetkisi gerekli.' });
-            return;
-          }
-
-          const id = decodeURIComponent(url.pathname.replace('/api/tables/', ''));
-          const tables = await readTables();
-          await writeTables(tables.filter((table) => table.id !== id));
-          await publishTables();
-          sendJson(response, 200, { ok: true });
-          return;
-        }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'İşlem tamamlanamadı.';
         sendJson(response, 500, { error: message });
@@ -161,13 +146,17 @@ const localGithubPublisher = () => ({
   }
 });
 
-export default defineConfig({
-  plugins: [react(), localGithubPublisher()],
-  base: './',
-  server: {
-    // Make the dev server reachable on the LAN and allow the localtunnel host
-    host: true,
-    port: 5173,
-    allowedHosts: ['stock-table-planner.loca.lt']
-  }
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    plugins: [react(), localGithubPublisher(env.ADMIN_SECRET ?? '')],
+    base: './',
+    server: {
+      // Make the dev server reachable on the LAN and allow the localtunnel host
+      host: true,
+      port: 5173,
+      allowedHosts: ['stock-table-planner.loca.lt']
+    }
+  };
 });
