@@ -1,6 +1,166 @@
 {
   "tables": [
     {
+      "id": "1783443265890",
+      "title": "ISVEA",
+      "subtitle": "Kâr tablosu",
+      "summaryCards": [],
+      "columns": [
+        {
+          "id": "period",
+          "label": "Dönem"
+        },
+        {
+          "id": "value",
+          "label": "Tahmini değer",
+          "highlight": true
+        },
+        {
+          "id": "gain",
+          "label": "Günlük kazanç"
+        },
+        {
+          "id": "total",
+          "label": "Toplam kâr",
+          "highlight": true
+        }
+      ],
+      "rows": [
+        {
+          "id": "1783443265890-Başlangıç",
+          "highlighted": false,
+          "cells": {
+            "period": "Başlangıç",
+            "value": "1.004",
+            "gain": "-",
+            "total": "-"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 1",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 1",
+            "value": "1.104",
+            "gain": "+100",
+            "total": "+100"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 2",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 2",
+            "value": "1.215",
+            "gain": "+111",
+            "total": "+211"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 3",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 3",
+            "value": "1.337",
+            "gain": "+122",
+            "total": "+333"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 4",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 4",
+            "value": "1.471",
+            "gain": "+134",
+            "total": "+467"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 5",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 5",
+            "value": "1.619",
+            "gain": "+148",
+            "total": "+615"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 6",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 6",
+            "value": "1.781",
+            "gain": "+162",
+            "total": "+777"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 7",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 7",
+            "value": "1.960",
+            "gain": "+179",
+            "total": "+956"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 8",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 8",
+            "value": "2.156",
+            "gain": "+196",
+            "total": "+1.152"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 9",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 9",
+            "value": "2.372",
+            "gain": "+216",
+            "total": "+1.368"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 10",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 10",
+            "value": "2.610",
+            "gain": "+238",
+            "total": "+1.606"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 11",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 11",
+            "value": "2.872",
+            "gain": "+262",
+            "total": "+1.868"
+          }
+        },
+        {
+          "id": "1783443265890-Gün 12",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 12",
+            "value": "3.160",
+            "gain": "+288",
+            "total": "+2.156"
+          }
+        }
+      ],
+      "updatedAt": "2026-07-07T16:54:25.899Z",
+      "published": true
+    },
+    {
       "id": "1783441909157",
       "title": "SSAAT",
       "subtitle": "Birim fiyat: 56",
