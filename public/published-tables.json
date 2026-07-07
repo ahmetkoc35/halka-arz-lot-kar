@@ -1,6 +1,166 @@
 {
   "tables": [
     {
+      "id": "1783441838203",
+      "title": "GOLDA",
+      "subtitle": "Kâr tablosu",
+      "summaryCards": [],
+      "columns": [
+        {
+          "id": "period",
+          "label": "Dönem"
+        },
+        {
+          "id": "value",
+          "label": "Tahmini değer",
+          "highlight": true
+        },
+        {
+          "id": "gain",
+          "label": "Günlük kazanç"
+        },
+        {
+          "id": "total",
+          "label": "Toplam kâr",
+          "highlight": true
+        }
+      ],
+      "rows": [
+        {
+          "id": "1783441838203-Başlangıç",
+          "highlighted": false,
+          "cells": {
+            "period": "Başlangıç",
+            "value": "1.215",
+            "gain": "-",
+            "total": "-"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 1",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 1",
+            "value": "1.336",
+            "gain": "+121",
+            "total": "+121"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 2",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 2",
+            "value": "1.470",
+            "gain": "+134",
+            "total": "+255"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 3",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 3",
+            "value": "1.618",
+            "gain": "+148",
+            "total": "+403"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 4",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 4",
+            "value": "1.780",
+            "gain": "+162",
+            "total": "+565"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 5",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 5",
+            "value": "1.959",
+            "gain": "+179",
+            "total": "+744"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 6",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 6",
+            "value": "2.155",
+            "gain": "+196",
+            "total": "+940"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 7",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 7",
+            "value": "2.371",
+            "gain": "+216",
+            "total": "+1.156"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 8",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 8",
+            "value": "2.609",
+            "gain": "+238",
+            "total": "+1.394"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 9",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 9",
+            "value": "2.870",
+            "gain": "+261",
+            "total": "+1.655"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 10",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 10",
+            "value": "3.158",
+            "gain": "+288",
+            "total": "+1.943"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 11",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 11",
+            "value": "3.474",
+            "gain": "+316",
+            "total": "+2.259"
+          }
+        },
+        {
+          "id": "1783441838203-Gün 12",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 12",
+            "value": "3.822",
+            "gain": "+348",
+            "total": "+2.607"
+          }
+        }
+      ],
+      "updatedAt": "2026-07-07T16:30:38.210Z",
+      "published": true
+    },
+    {
       "id": "1783441188563",
       "title": "SOHOE",
       "subtitle": "150 lot × 15",
