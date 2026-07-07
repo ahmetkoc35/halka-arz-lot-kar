@@ -639,7 +639,7 @@ const App = () => {
       {activeTab === 'admin' && canUseAdminOnThisPc && !adminSecret && (
         <section className="card empty-state">
           <h2>Admin girişi</h2>
-          <p>Bu bölüm yalnızca bu PC'de görünür. Varsayılan şifre: local-dev-admin</p>
+          <p>Bu bölüm yalnızca bu PC'de görünür. Varsayılan şifre: A1hmet.koc</p>
           <div className="action-row">
             <input
               type="password"

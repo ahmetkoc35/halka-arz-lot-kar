@@ -24,7 +24,7 @@ type SharedTableDraft = Omit<SharedTable, 'id' | 'updatedAt'> & {
 
 const execFileAsync = promisify(execFile);
 const dataPath = resolve(process.cwd(), 'public/published-tables.json');
-const localAdminSecret = process.env.ADMIN_SECRET || 'local-dev-admin';
+const localAdminSecret = process.env.ADMIN_SECRET || 'A1hmet.koc';
 
 const sendJson = (response: ServerResponse, status: number, data: unknown) => {
   response.statusCode = status;
