@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { PublicTables } from './components/PublicTables';
-import { fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
+import { fetchAdminTables, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
 import type { SharedTable } from './types/sharedTable';
 
 type TabName = 'published' | 'favorites' | 'profit' | 'myTables' | 'builder' | 'manage' | 'admin';
@@ -270,12 +270,31 @@ const App = () => {
     }
   };
 
+  const loadAdminTables = async () => {
+    if (!canUseAdminOnThisPc || !adminSecret) return;
+    setIsPublishedLoading(true);
+    setPublishedError('');
+
+    try {
+      setPublishedTables(await fetchAdminTables(adminSecret));
+    } catch (error) {
+      setPublishedError(error instanceof Error ? error.message : 'Yayınlanan tablolar alınamadı.');
+    } finally {
+      setIsPublishedLoading(false);
+    }
+  };
+
   useEffect(() => {
     void loadPublishedTables();
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'published' || activeTab === 'favorites' || activeTab === 'manage') {
+    if (activeTab === 'manage' && canUseAdminOnThisPc && adminSecret) {
+      void loadAdminTables();
+      return;
+    }
+
+    if (activeTab === 'published' || activeTab === 'favorites') {
       void loadPublishedTables();
     }
   }, [activeTab]);
@@ -327,8 +346,11 @@ const App = () => {
     setAdminError('');
 
     try {
-      await saveSharedTable(table, adminSecret);
-      await loadPublishedTables();
+      const savedTable = await saveSharedTable(table, adminSecret);
+      setPublishedTables((currentTables) => [
+        savedTable,
+        ...currentTables.filter((currentTable) => currentTable.id !== savedTable.id)
+      ]);
       setActiveTab('manage');
     } catch (error) {
       setAdminError(error instanceof Error ? error.message : 'Tablo yayınlanamadı.');
