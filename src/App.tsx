@@ -289,7 +289,11 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'manage' && canUseAdminOnThisPc && adminSecret) {
+    if (
+      canUseAdminOnThisPc &&
+      adminSecret &&
+      (activeTab === 'published' || activeTab === 'favorites' || activeTab === 'manage')
+    ) {
       void loadAdminTables();
       return;
     }
