@@ -4,7 +4,7 @@ import { PublicTables } from './components/PublicTables';
 import { deleteSharedTable, fetchPublishedTables, saveSharedTable, verifyAdminSecret } from './services/tablesApi';
 import type { SharedTable } from './types/sharedTable';
 
-type TabName = 'published' | 'favorites' | 'builder' | 'profit' | 'manage' | 'admin';
+type TabName = 'published' | 'favorites' | 'profit' | 'myTables' | 'builder' | 'manage' | 'admin';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -210,6 +210,11 @@ const App = () => {
   const [profitName, setProfitName] = useState('');
   const [profitPrice, setProfitPrice] = useState('');
   const [profitLots, setProfitLots] = useState('');
+  const [localProfitTables, setLocalProfitTables] = useState<ProfitDraft[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const stored = window.localStorage.getItem('localProfitTables');
+    return stored ? JSON.parse(stored) : [];
+  });
   const [publishedTables, setPublishedTables] = useState<SharedTable[]>([]);
   const [publishedError, setPublishedError] = useState('');
   const [isPublishedLoading, setIsPublishedLoading] = useState(true);
@@ -235,6 +240,7 @@ const App = () => {
     [profitLots, profitPrice]
   );
   const visibleFavoriteTables = publishedTables.filter((table) => favoriteIds.includes(table.id));
+  const localProfitShareables = localProfitTables.map(profitDraftToShareable);
 
   useEffect(() => {
     const beforeInstallPromptHandler = (event: Event) => {
@@ -363,6 +369,29 @@ const App = () => {
     await publishTable(profitDraftToShareable(profitDraft));
   };
 
+  const saveLocalProfitTable = () => {
+    const lotsValue = parseIntegerValue(profitLots);
+    const priceValue = parseDecimalValue(profitPrice);
+    const profitDraft: ProfitDraft = {
+      id: Date.now(),
+      name: profitName.trim() || `Kâr ${localProfitTables.length + 1}`,
+      initialPrice: priceValue,
+      lots: lotsValue,
+      values: buildProfitValues(lotsValue, priceValue)
+    };
+    const nextTables = [profitDraft, ...localProfitTables];
+
+    setLocalProfitTables(nextTables);
+    window.localStorage.setItem('localProfitTables', JSON.stringify(nextTables));
+    setActiveTab('myTables');
+  };
+
+  const deleteLocalProfitTable = (tableId: number) => {
+    const nextTables = localProfitTables.filter((table) => table.id !== tableId);
+    setLocalProfitTables(nextTables);
+    window.localStorage.setItem('localProfitTables', JSON.stringify(nextTables));
+  };
+
   const deletePublishedTable = async (tableId: string) => {
     if (!canUseAdminOnThisPc || !adminSecret || !window.confirm('Bu yayınlanan tablo silinsin mi?')) return;
     setIsPublishing(true);
@@ -399,18 +428,21 @@ const App = () => {
 
       <nav className="tabs" aria-label="Uygulama bölümleri">
         <button className={activeTab === 'published' ? 'tab active' : 'tab'} onClick={() => setActiveTab('published')}>
-          Yayın
+          Yayında
         </button>
         <button className={activeTab === 'favorites' ? 'tab active' : 'tab'} onClick={() => setActiveTab('favorites')}>
-          Favoriler
+          Favorilerim
+        </button>
+        <button className={activeTab === 'profit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('profit')}>
+          Kâr Tablosu Oluştur
+        </button>
+        <button className={activeTab === 'myTables' ? 'tab active' : 'tab'} onClick={() => setActiveTab('myTables')}>
+          Tablolarım
         </button>
         {canUseAdminOnThisPc && adminSecret && (
           <>
             <button className={activeTab === 'builder' ? 'tab active' : 'tab'} onClick={() => setActiveTab('builder')}>
               Tablo
-            </button>
-            <button className={activeTab === 'profit' ? 'tab active' : 'tab'} onClick={() => setActiveTab('profit')}>
-              Kâr
             </button>
             <button className={activeTab === 'manage' ? 'tab active' : 'tab'} onClick={() => setActiveTab('manage')}>
               Yönet
@@ -443,6 +475,19 @@ const App = () => {
           onRefresh={loadPublishedTables}
           onToggleFavorite={toggleFavorite}
           tables={visibleFavoriteTables}
+        />
+      )}
+
+      {activeTab === 'myTables' && (
+        <PublicTables
+          deleteLabel="Tabloyu sil"
+          emptyMessage="Kâr Tablosu Oluştur sekmesinden kendi tablonu kaydedebilirsin."
+          emptyTitle="Henüz kâr tablon yok"
+          error=""
+          isLoading={false}
+          onDeleteTable={(tableId) => deleteLocalProfitTable(Number(tableId))}
+          onRefresh={() => undefined}
+          tables={localProfitShareables}
         />
       )}
 
@@ -536,8 +581,8 @@ const App = () => {
                 />
               </label>
             </div>
-            <button onClick={publishProfitTable} disabled={isPublishing}>
-              {isPublishing ? 'Yayınlanıyor...' : 'Kâr tablosunu yayınla'}
+            <button onClick={canUseAdminOnThisPc && adminSecret ? publishProfitTable : saveLocalProfitTable} disabled={isPublishing}>
+              {isPublishing ? 'Yayınlanıyor...' : canUseAdminOnThisPc && adminSecret ? 'Kâr tablosunu yayınla' : 'Kâr tablosunu kaydet'}
             </button>
             {adminError && <p className="error-text">{adminError}</p>}
           </section>

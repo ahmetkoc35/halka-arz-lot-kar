@@ -1,7 +1,7 @@
 import type { SharedTable, SharedTableDraft, TableResponse, TablesResponse } from '../types/sharedTable';
 
 const DEFAULT_PUBLIC_TABLES_URL =
-  'https://raw.githubusercontent.com/ahmetkoc35/halka-arz-lot-kar/main/public/published-tables.json';
+  'https://api.github.com/repos/ahmetkoc35/halka-arz-lot-kar/contents/public/published-tables.json?ref=main';
 const PUBLIC_TABLES_URL = import.meta.env.VITE_PUBLIC_TABLES_URL ?? DEFAULT_PUBLIC_TABLES_URL;
 const ADMIN_API_BASE_URL = (import.meta.env.VITE_ADMIN_API_BASE_URL ?? '').replace(/\/$/, '');
 
@@ -25,8 +25,20 @@ const adminHeaders = (adminToken: string) => ({
 
 export const fetchPublishedTables = async () => {
   const separator = PUBLIC_TABLES_URL.includes('?') ? '&' : '?';
-  const data = await parseJson<TablesResponse>(await fetch(`${PUBLIC_TABLES_URL}${separator}t=${Date.now()}`));
-  return data.tables;
+  const response = await fetch(`${PUBLIC_TABLES_URL}${separator}t=${Date.now()}`, { cache: 'no-store' });
+  const data = (await response.json().catch(() => null)) as TablesResponse | { content?: string; error?: string } | null;
+
+  if (!response.ok) {
+    const message = data && 'error' in data && typeof data.error === 'string' ? data.error : 'Yayınlanan tablolar alınamadı.';
+    throw new Error(message);
+  }
+
+  if (data && 'content' in data && typeof data.content === 'string') {
+    const bytes = Uint8Array.from(atob(data.content.replace(/\s/g, '')), (char) => char.charCodeAt(0));
+    return (JSON.parse(new TextDecoder().decode(bytes)) as TablesResponse).tables;
+  }
+
+  return (data as TablesResponse).tables;
 };
 
 export const fetchAdminTables = async (adminToken: string) => {

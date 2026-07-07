@@ -135,7 +135,7 @@ VITE_API_BASE_URL
 
 This must match the hidden activation secret you use in `/?admin=...`.
 
-`VITE_PUBLIC_TABLES_URL` points to the public GitHub JSON file that APK users read. The app defaults to `https://raw.githubusercontent.com/ahmetkoc35/halka-arz-lot-kar/main/public/published-tables.json`.
+`VITE_PUBLIC_TABLES_URL` points to the public GitHub JSON file that APK users read. The app defaults to GitHub's Contents API for `public/published-tables.json` so newly published tables appear faster than the raw-file cache.
 
 For local PC admin publishing, run `npm run dev`, open `http://localhost:5173`, and use the `Yönetim` tab. The default local admin secret is `local-dev-admin` unless you set `ADMIN_SECRET` in your local environment. Saving a published table updates `public/published-tables.json`, commits it, and pushes it to GitHub.
 

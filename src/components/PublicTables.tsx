@@ -12,15 +12,21 @@ type PublicTablesProps = {
   onRefresh: () => void;
   favoriteIds?: string[];
   onToggleFavorite?: (tableId: string) => void;
+  onDeleteTable?: (tableId: string) => void;
+  deleteLabel?: string;
+  emptyTitle?: string;
+  emptyMessage?: string;
 };
 
 type PublicTableItemProps = {
   table: SharedTable;
   isFavorite: boolean;
   onToggleFavorite?: (tableId: string) => void;
+  onDeleteTable?: (tableId: string) => void;
+  deleteLabel?: string;
 };
 
-const PublicTableItem = ({ isFavorite, onToggleFavorite, table }: PublicTableItemProps) => {
+const PublicTableItem = ({ deleteLabel = 'Sil', isFavorite, onDeleteTable, onToggleFavorite, table }: PublicTableItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
   const { downloadImage, isSharing, shareError, shareImage, shareStatus } = useShareTableImage(shareCardRef, table);
@@ -83,6 +89,11 @@ const PublicTableItem = ({ isFavorite, onToggleFavorite, table }: PublicTableIte
         <button className="secondary" onClick={downloadImage} disabled={isSharing}>
           PNG indir
         </button>
+        {onDeleteTable && (
+          <button className="danger" onClick={() => onDeleteTable(table.id)}>
+            {deleteLabel}
+          </button>
+        )}
       </div>
       {shareStatus && <p className="success-text">{shareStatus}</p>}
       {shareError && <p className="error-text">{shareError}</p>}
@@ -94,7 +105,18 @@ const PublicTableItem = ({ isFavorite, onToggleFavorite, table }: PublicTableIte
   );
 };
 
-export const PublicTables = ({ error, favoriteIds = [], isLoading, onRefresh, onToggleFavorite, tables }: PublicTablesProps) => {
+export const PublicTables = ({
+  deleteLabel,
+  emptyMessage = 'Yayınlanan tablolar burada otomatik olarak görünecek.',
+  emptyTitle = 'Henüz yayınlanmış tablo yok',
+  error,
+  favoriteIds = [],
+  isLoading,
+  onDeleteTable,
+  onRefresh,
+  onToggleFavorite,
+  tables
+}: PublicTablesProps) => {
   if (isLoading) {
     return (
       <section className="card">
@@ -116,8 +138,8 @@ export const PublicTables = ({ error, favoriteIds = [], isLoading, onRefresh, on
   if (tables.length === 0) {
     return (
       <section className="card empty-state">
-        <h2>Henüz yayınlanmış tablo yok</h2>
-        <p>Yayınlanan tablolar burada otomatik olarak görünecek.</p>
+        <h2>{emptyTitle}</h2>
+        <p>{emptyMessage}</p>
       </section>
     );
   }
@@ -128,6 +150,8 @@ export const PublicTables = ({ error, favoriteIds = [], isLoading, onRefresh, on
         <PublicTableItem
           isFavorite={favoriteIds.includes(table.id)}
           key={table.id}
+          deleteLabel={deleteLabel}
+          onDeleteTable={onDeleteTable}
           onToggleFavorite={onToggleFavorite}
           table={table}
         />
