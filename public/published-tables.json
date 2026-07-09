@@ -1,6 +1,166 @@
 {
   "tables": [
     {
+      "id": "1783633201799",
+      "title": "ISVEA",
+      "subtitle": "Kâr tablosu",
+      "summaryCards": [],
+      "columns": [
+        {
+          "id": "period",
+          "label": "Dönem"
+        },
+        {
+          "id": "value",
+          "label": "Tahmini değer",
+          "highlight": true
+        },
+        {
+          "id": "gain",
+          "label": "Günlük kazanç"
+        },
+        {
+          "id": "total",
+          "label": "Toplam kâr",
+          "highlight": true
+        }
+      ],
+      "rows": [
+        {
+          "id": "1783633201799-Başlangıç",
+          "highlighted": false,
+          "cells": {
+            "period": "Başlangıç",
+            "value": "983",
+            "gain": "-",
+            "total": "-"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 1",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 1",
+            "value": "1.081",
+            "gain": "+98",
+            "total": "+98"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 2",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 2",
+            "value": "1.190",
+            "gain": "+109",
+            "total": "+207"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 3",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 3",
+            "value": "1.309",
+            "gain": "+119",
+            "total": "+326"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 4",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 4",
+            "value": "1.440",
+            "gain": "+131",
+            "total": "+457"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 5",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 5",
+            "value": "1.585",
+            "gain": "+145",
+            "total": "+602"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 6",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 6",
+            "value": "1.744",
+            "gain": "+159",
+            "total": "+761"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 7",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 7",
+            "value": "1.919",
+            "gain": "+175",
+            "total": "+936"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 8",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 8",
+            "value": "2.111",
+            "gain": "+192",
+            "total": "+1.128"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 9",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 9",
+            "value": "2.323",
+            "gain": "+212",
+            "total": "+1.340"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 10",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 10",
+            "value": "2.556",
+            "gain": "+233",
+            "total": "+1.573"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 11",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 11",
+            "value": "2.812",
+            "gain": "+256",
+            "total": "+1.829"
+          }
+        },
+        {
+          "id": "1783633201799-Gün 12",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 12",
+            "value": "3.094",
+            "gain": "+282",
+            "total": "+2.111"
+          }
+        }
+      ],
+      "updatedAt": "2026-07-09T21:40:01.808Z",
+      "published": true
+    },
+    {
       "id": "1783633161177",
       "title": "ISVEA",
       "subtitle": "Kâr tablosu",
