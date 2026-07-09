@@ -56,6 +56,20 @@ const writeTables = async (tables: SharedTable[]) => {
   await writeFile(dataPath, `${JSON.stringify({ tables }, null, 2)}\n`, 'utf8');
 };
 
+const syncPublishedBranch = async () => {
+  await execFileAsync('git', ['fetch', 'origin', 'main']);
+  await execFileAsync('git', ['rebase', 'origin/main']);
+};
+
+const pushPublishedBranch = async () => {
+  try {
+    await execFileAsync('git', ['push', 'origin', 'main']);
+  } catch {
+    await syncPublishedBranch();
+    await execFileAsync('git', ['push', 'origin', 'main']);
+  }
+};
+
 const publishTables = async () => {
   await execFileAsync('git', ['add', 'public/published-tables.json']);
 
@@ -64,7 +78,7 @@ const publishTables = async () => {
     return;
   } catch {
     await execFileAsync('git', ['commit', '-m', 'Update published tables', '--', 'public/published-tables.json']);
-    await execFileAsync('git', ['push', 'origin', 'main']);
+    await pushPublishedBranch();
   }
 };
 
@@ -122,6 +136,7 @@ const localGithubPublisher = (localAdminSecret: string) => ({
             return;
           }
 
+          await syncPublishedBranch();
           const table = cleanDraft(await readBody<SharedTableDraft>(request));
           if (!table.title || table.columns.length === 0) {
             sendJson(response, 400, { error: 'Başlık ve en az bir kolon gerekli.' });
@@ -142,6 +157,7 @@ const localGithubPublisher = (localAdminSecret: string) => ({
             return;
           }
 
+          await syncPublishedBranch();
           const id = decodeURIComponent(url.pathname.replace('/api/tables/', ''));
           const tables = await readTables();
           await writeTables(tables.filter((table) => table.id !== id));
