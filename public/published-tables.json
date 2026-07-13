@@ -1,6 +1,166 @@
 {
   "tables": [
     {
+      "id": "1783969039526",
+      "title": "SARAE",
+      "subtitle": "Kâr tablosu",
+      "summaryCards": [],
+      "columns": [
+        {
+          "id": "period",
+          "label": "Dönem"
+        },
+        {
+          "id": "value",
+          "label": "Tahmini değer",
+          "highlight": true
+        },
+        {
+          "id": "gain",
+          "label": "Günlük kazanç"
+        },
+        {
+          "id": "total",
+          "label": "Toplam kâr",
+          "highlight": true
+        }
+      ],
+      "rows": [
+        {
+          "id": "1783969039526-Başlangıç",
+          "highlighted": false,
+          "cells": {
+            "period": "Başlangıç",
+            "value": "3.150",
+            "gain": "-",
+            "total": "-"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 1",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 1",
+            "value": "3.466",
+            "gain": "+316",
+            "total": "+316"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 2",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 2",
+            "value": "3.813",
+            "gain": "+347",
+            "total": "+663"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 3",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 3",
+            "value": "4.195",
+            "gain": "+382",
+            "total": "+1.045"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 4",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 4",
+            "value": "4.615",
+            "gain": "+420",
+            "total": "+1.465"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 5",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 5",
+            "value": "5.077",
+            "gain": "+462",
+            "total": "+1.927"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 6",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 6",
+            "value": "5.585",
+            "gain": "+508",
+            "total": "+2.435"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 7",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 7",
+            "value": "6.144",
+            "gain": "+559",
+            "total": "+2.994"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 8",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 8",
+            "value": "6.759",
+            "gain": "+615",
+            "total": "+3.609"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 9",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 9",
+            "value": "7.435",
+            "gain": "+676",
+            "total": "+4.285"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 10",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 10",
+            "value": "8.179",
+            "gain": "+744",
+            "total": "+5.029"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 11",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 11",
+            "value": "8.997",
+            "gain": "+818",
+            "total": "+5.847"
+          }
+        },
+        {
+          "id": "1783969039526-Gün 12",
+          "highlighted": true,
+          "cells": {
+            "period": "Gün 12",
+            "value": "9.897",
+            "gain": "+900",
+            "total": "+6.747"
+          }
+        }
+      ],
+      "updatedAt": "2026-07-13T18:57:22.838Z",
+      "published": true
+    },
+    {
       "id": "1783695457739",
       "title": "SSAAT",
       "subtitle": "Kâr tablosu",
